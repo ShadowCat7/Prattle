@@ -1,0 +1,20 @@
+C:\Users\Attridge\AppData\Local\Temporary Projects\MessengerClient\bin\Release\MessengerClient.exe
+C:\Users\Attridge\AppData\Local\Temporary Projects\MessengerClient\bin\Release\MessengerClient.pdb
+C:\Users\Attridge\AppData\Local\Temporary Projects\MessengerClient\obj\x86\Release\ResolveAssemblyReference.cache
+C:\Users\Attridge\AppData\Local\Temporary Projects\MessengerClient\obj\x86\Release\MessengerClient.Messenger.resources
+C:\Users\Attridge\AppData\Local\Temporary Projects\MessengerClient\obj\x86\Release\MessengerClient.Form2.resources
+C:\Users\Attridge\AppData\Local\Temporary Projects\MessengerClient\obj\x86\Release\MessengerClient.Properties.Resources.resources
+C:\Users\Attridge\AppData\Local\Temporary Projects\MessengerClient\obj\x86\Release\GenerateResource.read.1.tlog
+C:\Users\Attridge\AppData\Local\Temporary Projects\MessengerClient\obj\x86\Release\GenerateResource.write.1.tlog
+C:\Users\Attridge\AppData\Local\Temporary Projects\MessengerClient\obj\x86\Release\MessengerClient.exe
+C:\Users\Attridge\AppData\Local\Temporary Projects\MessengerClient\obj\x86\Release\MessengerClient.pdb
+C:\Users\Attridge\Programs\MessengerClient\MessengerClient\bin\Release\MessengerClient.exe
+C:\Users\Attridge\Programs\MessengerClient\MessengerClient\bin\Release\MessengerClient.pdb
+C:\Users\Attridge\Programs\MessengerClient\MessengerClient\obj\x86\Release\ResolveAssemblyReference.cache
+C:\Users\Attridge\Programs\MessengerClient\MessengerClient\obj\x86\Release\MessengerClient.Messenger.resources
+C:\Users\Attridge\Programs\MessengerClient\MessengerClient\obj\x86\Release\MessengerClient.Form2.resources
+C:\Users\Attridge\Programs\MessengerClient\MessengerClient\obj\x86\Release\MessengerClient.Properties.Resources.resources
+C:\Users\Attridge\Programs\MessengerClient\MessengerClient\obj\x86\Release\GenerateResource.read.1.tlog
+C:\Users\Attridge\Programs\MessengerClient\MessengerClient\obj\x86\Release\GenerateResource.write.1.tlog
+C:\Users\Attridge\Programs\MessengerClient\MessengerClient\obj\x86\Release\MessengerClient.exe
+C:\Users\Attridge\Programs\MessengerClient\MessengerClient\obj\x86\Release\MessengerClient.pdb
