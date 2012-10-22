@@ -1,1 +1,9 @@
-Instant Messenger.
+Prattle is a simple instant messenger.
+
+Version 0.9
+
+Current features: chat, kicking, and multiple users at the same time.
+
+Current bugs:
+
+Upcoming features: chat history log, banning users, server connection history for client.
