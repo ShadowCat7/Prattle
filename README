@@ -1,6 +1,11 @@
 Prattle is a simple instant messenger.
 
-Version 0.9
+Version 0.9.1
+
+Version history:
+
+0.9: First beta release.
+0.9.1: Fixed client crash when closing Get IP window.
 
 Current features: chat, kicking, and multiple users at the same time.
 

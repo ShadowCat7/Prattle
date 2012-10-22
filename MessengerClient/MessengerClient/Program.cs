@@ -15,7 +15,7 @@ namespace MessengerClient
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Messenger());
+            Application.Run(new Prattle());
         }
     }
 }

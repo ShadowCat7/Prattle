@@ -10,7 +10,7 @@ using System.IO;
 
 namespace MessengerClient
 {
-    public partial class Messenger : Form
+    public partial class Prattle : Form
     {
         private string Name;
         private string Message;
@@ -25,7 +25,7 @@ namespace MessengerClient
 
         System.Threading.Thread UpdateThread;
 
-        public Messenger()
+        public Prattle()
         {
             InitializeComponent();
 
@@ -73,8 +73,6 @@ namespace MessengerClient
 
         private void JustConnected()
         {
-            StreamWriter writer = new StreamWriter(tcpClient.GetStream());
-
             textBox.Text += "You have been connected.\n";
             writeMessage("Please type your name.\n");
 
@@ -93,35 +91,44 @@ namespace MessengerClient
         {
             while (true)
             {
-                StreamReader reader = new StreamReader(tcpClient.GetStream());
                 try
                 {
-                    string output = reader.ReadLine();
-                    if (reader.EndOfStream)
+                    StreamReader reader;
+                    if (tcpClient.Connected)
                     {
-                        Disconnect();
-                    }
-                    else
-                    {
-                        if (output != "")
+                        reader = new StreamReader(tcpClient.GetStream());
+                        try
                         {
-                            if (output == "/%text%/")
+                            string output = reader.ReadLine();
+                            if (reader.EndOfStream)
                             {
-                                output = reader.ReadLine();
-                                writeMessage(output);
+                                Disconnect();
                             }
-                            if (output == "/%users%/")
+                            else
                             {
-                                output = reader.ReadLine();
-                                usersChanged(output);
+                                if (output != "")
+                                {
+                                    if (output == "/%text%/")
+                                    {
+                                        output = reader.ReadLine();
+                                        writeMessage(output);
+                                    }
+                                    if (output == "/%users%/")
+                                    {
+                                        output = reader.ReadLine();
+                                        usersChanged(output);
+                                    }
+                                }
                             }
+                        }
+                        catch (IOException)
+                        {
+                            Disconnect();
                         }
                     }
                 }
-                catch (IOException)
-                {
-                    Disconnect();
-                }
+                catch (NullReferenceException)
+                { }
             }
         }
 
