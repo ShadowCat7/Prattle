@@ -41,6 +41,7 @@ namespace MessengerClient
 
             if (!File.Exists("PreviousIPs"))
             { File.Create("PreviousIPs"); }
+            while (File.GetAttributes("PreviousIPs") == FileAttributes.Offline) { }
             StreamReader reader = new StreamReader("PreviousIPs");
             
             string fileInfo = reader.ReadToEnd();
