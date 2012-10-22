@@ -16,7 +16,7 @@ namespace InstantMessenger
 
         public string Message;
 
-        private Thread ReceiveMessage;
+        public Thread ReceiveMessage;
 
         public Communicator(System.Net.Sockets.TcpClient connection)
         {
@@ -27,6 +27,7 @@ namespace InstantMessenger
             Name = reader.ReadLine();
 
             ReceiveMessage = new Thread(new ThreadStart(getMessage));
+            ReceiveMessage.IsBackground = true;
             ReceiveMessage.Start();
         }
 
@@ -35,9 +36,18 @@ namespace InstantMessenger
             while (true)
             {
                 try
-                { Message = reader.ReadLine(); }
-                catch (Exception IOException)
+                {
+                    Message = reader.ReadLine();
+                    if (reader.EndOfStream)
+                    {
+                        client.Close();
+                        ReceiveMessage.Abort();
+                    }
+                }
+                catch (IOException)
                 { client.Close(); }
+                catch (ObjectDisposedException)
+                { reader.Dispose(); }
             }
         }
     }

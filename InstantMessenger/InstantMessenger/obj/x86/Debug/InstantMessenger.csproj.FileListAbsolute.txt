@@ -17,3 +17,12 @@ C:\Users\Attridge\Programs\InstantMessenger\InstantMessenger\obj\x86\Debug\Gener
 C:\Users\Attridge\Programs\InstantMessenger\InstantMessenger\obj\x86\Debug\GenerateResource.write.1.tlog
 C:\Users\Attridge\Programs\InstantMessenger\InstantMessenger\obj\x86\Debug\InstantMessenger.exe
 C:\Users\Attridge\Programs\InstantMessenger\InstantMessenger\obj\x86\Debug\InstantMessenger.pdb
+C:\Users\Attridge\Programs\Prattle\InstantMessenger\InstantMessenger\obj\x86\Debug\InstantMessenger.exe
+C:\Users\Attridge\Programs\Prattle\InstantMessenger\InstantMessenger\obj\x86\Debug\InstantMessenger.pdb
+C:\Users\Attridge\Programs\Prattle\InstantMessenger\InstantMessenger\bin\Debug\InstantMessenger.exe
+C:\Users\Attridge\Programs\Prattle\InstantMessenger\InstantMessenger\bin\Debug\InstantMessenger.pdb
+C:\Users\Attridge\Programs\Prattle\InstantMessenger\InstantMessenger\obj\x86\Debug\ResolveAssemblyReference.cache
+C:\Users\Attridge\Programs\Prattle\InstantMessenger\InstantMessenger\obj\x86\Debug\InstantMessenger.ChatServer.resources
+C:\Users\Attridge\Programs\Prattle\InstantMessenger\InstantMessenger\obj\x86\Debug\InstantMessenger.Properties.Resources.resources
+C:\Users\Attridge\Programs\Prattle\InstantMessenger\InstantMessenger\obj\x86\Debug\GenerateResource.read.1.tlog
+C:\Users\Attridge\Programs\Prattle\InstantMessenger\InstantMessenger\obj\x86\Debug\GenerateResource.write.1.tlog

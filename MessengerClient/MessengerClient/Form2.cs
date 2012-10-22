@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using System.IO;
 
 namespace MessengerClient
 {
@@ -17,7 +18,17 @@ namespace MessengerClient
         public System.Net.Sockets.TcpClient checkClient;
 
         public Form2()
-        { InitializeComponent(); }
+        {
+            InitializeComponent();
+
+        }
+
+        private void Form2_Load(object sender, EventArgs e)
+        {
+            AcceptButton = button1;
+
+            //todo
+        }
 
         private void button1_Click(object sender, EventArgs e)
         {
@@ -37,6 +48,11 @@ namespace MessengerClient
             }
             else
             { label1.Text = "Not a valid IP Address.\nInput the IP Address of the server:"; }
+        }
+
+        private void Form2_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            //TODO
         }
     }
 }

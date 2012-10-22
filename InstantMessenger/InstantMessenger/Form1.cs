@@ -16,6 +16,7 @@ namespace InstantMessenger
     {
         private System.Net.Sockets.TcpListener chatServer;
         private System.Net.IPAddress ipAddress;
+        private System.Net.IPAddress extIP;
         private int port;
 
         private List<Communicator> Users;
@@ -24,7 +25,7 @@ namespace InstantMessenger
 
         private Thread UpdateThread;
 
-        private delegate void xThread_Message(List<string> message);
+        private delegate void xThread_Message(string message);
         private delegate void xThread_UserList();
 
         public ChatServer()
@@ -33,25 +34,7 @@ namespace InstantMessenger
 
             userTextBox.Text = "Users:\nNone";
 
-            //WebRequest request = WebRequest.Create("http://www.jsonip.com/");
-            //WebResponse response = request.GetResponse();
-            //StreamReader reader = new StreamReader(response.GetResponseStream());
-            //string webString = reader.ReadToEnd();
-            //string ipString = "";
-            //for (int i = 0; i < webString.Length; i++)
-            //{
-            //    if (webString[i] == ':')
-            //    { 
-            //        i += 2;
-            //        while (webString[i] != '"')
-            //        {
-            //            ipString += webString[i];
-            //            i++;
-            //        }
-            //        i = webString.Length;
-            //    }
-            //}
-            //ipAddress = System.Net.IPAddress.Parse(ipString);
+            AcceptButton = sendButton;
 
             IPHostEntry host;
             string localIP = "";
@@ -63,10 +46,28 @@ namespace InstantMessenger
                     localIP = ip.ToString();
                 }
             }
-
             ipAddress = System.Net.IPAddress.Parse(localIP);
-
             port = 24658;
+
+            WebRequest request = WebRequest.Create("http://www.jsonip.com/");
+            WebResponse response = request.GetResponse(); //TODO
+            StreamReader reader = new StreamReader(response.GetResponseStream());
+            string webString = reader.ReadToEnd();
+            string ipString = "";
+            for (int i = 0; i < webString.Length; i++)
+            {
+                if (webString[i] == ':')
+                {
+                    i += 2;
+                    while (webString[i] != '"')
+                    {
+                        ipString += webString[i];
+                        i++;
+                    }
+                    i = webString.Length;
+                }
+            }
+            extIP = System.Net.IPAddress.Parse(ipString);
 
             chatServer = new System.Net.Sockets.TcpListener(ipAddress, port);
             chatServer.Start();
@@ -77,12 +78,14 @@ namespace InstantMessenger
 
             List<string> tempString = new List<string>();
             tempString.Add("/%text%/");
-            tempString.Add("Chat server has been started.\n\t*IP Address: " + ipAddress.ToString()
-                + " Port: " + port.ToString());
+            tempString.Add("Chat server has been started.%/\t*LAN IP Address: " + ipAddress.ToString()
+                + " Port: " + port.ToString() + "%/\tExternal IP Address: " + extIP.ToString() 
+                + " Port: " + port.ToString() + "%/");
 
             SendMessage(tempString);
 
             UpdateThread = new Thread(new ThreadStart(UpdateServer));
+            UpdateThread.IsBackground = true;
             UpdateThread.Start();
         }
 
@@ -101,7 +104,7 @@ namespace InstantMessenger
                     List<string> tempString = new List<string>();
                     tempString.Add("/%text%/");
                     tempString.Add("\t" + Users[Users.Count - 1].Name +
-                        " has joined the chat.");
+                        " has joined the chat.%/");
 
                     SendMessage(tempString);
                 }
@@ -112,16 +115,16 @@ namespace InstantMessenger
                     {
                         List<string> tempString = new List<string>();
                         tempString.Add("/%text%/");
-                        tempString.Add(Users[i].Name + " : " + Users[i].Message);
+                        tempString.Add(Users[i].Name + " : " + Users[i].Message + "%/");
 
                         SendMessage(tempString);
                         Users[i].Message = "";
+                    }
 
-                        if (!Users[i].client.Connected)
-                        {
-                            Users.Remove(Users[i]);
-                            usersChanged();
-                        }
+                    if (!Users[i].client.Connected)
+                    {
+                        Users.Remove(Users[i]);
+                        usersChanged();
                     }
                 }
             }
@@ -130,17 +133,13 @@ namespace InstantMessenger
         void Commanded()
         {
             string tempCommand = "";
-            for (int i = 0; i < Command.Length; i++)
-            {
-                if (Command[i] >= 'a' && Command[i] <= 'z')
-                { tempCommand += (char)(Command[i] - 32); }
-                else
-                { tempCommand += Command[i]; }
-            }
+            tempCommand = lowerToCaps(Command);
 
             if (tempCommand == "HELP")
             {
-
+                writeMessage("Server Commands:\n\tSay: Text written after 'say' will be sent to all users as a message." + 
+                    "\n\tKick: The user whose name is written after 'kick' will be forcibly removed." + 
+                    "\n\tQuit: Closes the server.\n");
             }
 
             string tempString = "";
@@ -156,43 +155,83 @@ namespace InstantMessenger
 
                     List<string> tempListString = new List<string>();
                     tempListString.Add("/%text%/");
-                    tempListString.Add("Server : " + tempString);
+                    tempListString.Add("Server : " + tempString + "%/");
                     SendMessage(tempListString);
+                }
+                if (tempString == "KICK ")
+                {
+                    tempString = "";
+                    for (int j = 0; j < Command.Length - 5; j++)
+                    { tempString += Command[j + 5]; }
+
+                    tempString = lowerToCaps(tempString);
+
+                    for (int j = 0; j < Users.Count; j++)
+                    {
+                        if (tempString == lowerToCaps(Users[j].Name))
+                        {
+                            List<string> tempList = new List<string>();
+                            tempList.Add("/%text%/");
+                            tempList.Add(Users[j].Name + " has been kicked.");
+                            Users[j].ReceiveMessage.Abort();
+                            Users[j].client.Close();
+                            Users.Remove(Users[j]);
+                            usersChanged();
+                            SendMessage(tempList);
+                        }
+                    }
                 }
             }
 
-            if (Command == "QUIT")
+            if (tempCommand == "QUIT")
             { Close(); }
+        }
+
+        private string lowerToCaps(string input)
+        {
+            string tempString = "";
+            for (int i = 0; i < input.Length; i++)
+            {
+                if (input[i] >= 'a' && input[i] <= 'z')
+                { tempString += (char)(input[i] - 32); }
+                else
+                { tempString += input[i]; }
+            }
+            return tempString;
+        }
+
+        void writeMessage(string message)
+        {
+            if (!textBox.InvokeRequired)
+            {
+                textBox.Text += message;
+                textBox.SelectionStart = textBox.Text.Length;
+                textBox.ScrollToCaret();
+            }
+            else
+            {
+                xThread_Message d = new xThread_Message(writeMessage);
+                object[] o = new object[1];
+                o[0] = message;
+                Invoke(d, o);
+            }
         }
 
         void SendMessage(List<string> message)
         {
-            if (!textBox.InvokeRequired)
+            for (int i = 0; i < Users.Count; i++)
             {
-                if (message[0] == "/%text%/")
-                { textBox.Text += message[1] + '\n'; }
-                for (int i = 0; i < Users.Count; i++)
-                {
-                    Users[i].writer.WriteLine(message[0]);
-                    Users[i].writer.WriteLine(message[1]);
-                    try
-                    {
-                        Users[i].writer.Flush();
-                    }
-                    catch (Exception IOException)
-                    {
-                        Users[i].client.Close();
-                        Users.Remove(Users[i]);
-                        usersChanged();
-                    }
-                }
+                Users[i].writer.WriteLine(message[0]);
+                Users[i].writer.WriteLine(message[1]);
+                Users[i].writer.Flush();
             }
-            else
+
+            if (message[0] == "/%text%/")
             {
-                xThread_Message d = new xThread_Message(SendMessage);
-                object[] o = new object[1];
-                o[0] = message;
-                Invoke(d, o);
+                string tempString = "";
+                if (message.Count > 0)
+                { tempString = convertToReturns(message[1]); }
+                writeMessage(tempString);
             }
         }
 
@@ -202,15 +241,19 @@ namespace InstantMessenger
             {
                 List<string> tempString = new List<string>();
                 tempString.Add("/%users%/");
-                tempString.Add("Online:");
+                tempString.Add("Online:%/");
 
                 for (int i = 0; i < Users.Count; i++)
                 { tempString[1] += Users[i].Name + "%/"; }
 
                 if (Users.Count == 0)
-                { tempString[1] = "None"; }
+                { tempString[1] += "None"; }
 
-                userTextBox.Text = tempString[1];
+                string tempUsernames = "";
+                if (tempString.Count > 0)
+                { tempUsernames = convertToReturns(tempString[1]); }
+
+                userTextBox.Text = tempUsernames;
 
                 SendMessage(tempString);
             }
@@ -221,14 +264,43 @@ namespace InstantMessenger
             }
         }
 
+        private string convertToReturns(string message)
+        {
+            string tempString = "";
+            for (int i = 0; i < message.Length; i++)
+            {
+                if (message[i] == '%' && message[i + 1] == '/')
+                {
+                    i++;
+                    tempString += '\r';
+                }
+                else
+                { tempString += message[i]; }
+            }
+            return tempString;
+        }
+
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         { UpdateThread.Abort(); }
 
         private void sendButton_Click(object sender, EventArgs e)
+        { messageReady(); }
+
+        private void messageReady()
         {
             Command = chatBox.Text;
             chatBox.Text = "";
             Commanded();
+            chatBox.Focus();
+        }
+
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+        { this.Close(); }
+
+        private void ChatServer_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            { messageReady(); }
         }
     }
 }

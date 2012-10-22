@@ -18,3 +18,13 @@ C:\Users\Attridge\Programs\MessengerClient\MessengerClient\obj\x86\Debug\Messeng
 C:\Users\Attridge\Programs\MessengerClient\MessengerClient\obj\x86\Debug\MessengerClient.Properties.Resources.resources
 C:\Users\Attridge\Programs\MessengerClient\MessengerClient\obj\x86\Debug\GenerateResource.read.1.tlog
 C:\Users\Attridge\Programs\MessengerClient\MessengerClient\obj\x86\Debug\GenerateResource.write.1.tlog
+C:\Users\Attridge\Programs\Prattle\MessengerClient\MessengerClient\obj\x86\Debug\MessengerClient.exe
+C:\Users\Attridge\Programs\Prattle\MessengerClient\MessengerClient\obj\x86\Debug\MessengerClient.pdb
+C:\Users\Attridge\Programs\Prattle\MessengerClient\MessengerClient\bin\Debug\MessengerClient.exe
+C:\Users\Attridge\Programs\Prattle\MessengerClient\MessengerClient\bin\Debug\MessengerClient.pdb
+C:\Users\Attridge\Programs\Prattle\MessengerClient\MessengerClient\obj\x86\Debug\ResolveAssemblyReference.cache
+C:\Users\Attridge\Programs\Prattle\MessengerClient\MessengerClient\obj\x86\Debug\MessengerClient.Messenger.resources
+C:\Users\Attridge\Programs\Prattle\MessengerClient\MessengerClient\obj\x86\Debug\MessengerClient.Form2.resources
+C:\Users\Attridge\Programs\Prattle\MessengerClient\MessengerClient\obj\x86\Debug\MessengerClient.Properties.Resources.resources
+C:\Users\Attridge\Programs\Prattle\MessengerClient\MessengerClient\obj\x86\Debug\GenerateResource.read.1.tlog
+C:\Users\Attridge\Programs\Prattle\MessengerClient\MessengerClient\obj\x86\Debug\GenerateResource.write.1.tlog

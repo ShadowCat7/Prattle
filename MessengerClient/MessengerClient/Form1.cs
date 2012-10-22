@@ -16,8 +16,8 @@ namespace MessengerClient
         private string Message;
 
         private System.Net.Sockets.TcpClient tcpClient;
-        private System.Net.IPAddress ipAddress;
-        private int port;
+        private List<System.Net.IPAddress> ipAddresses;
+        private List<int> ports; //Might come in handy later.
 
         Form2 form2;
 
@@ -30,20 +30,56 @@ namespace MessengerClient
             InitializeComponent();
 
             form2 = new Form2();
+            ipAddresses = new List<System.Net.IPAddress>();
+            ports = new List<int>();
         }
 
         private void Messenger_Load(object sender, EventArgs e)
         {
             this.Show();
+            AcceptButton = sendButton;
+
+            if (!File.Exists("PreviousIPs"))
+            { File.Create("PreviousIPs"); }
+            StreamReader reader = new StreamReader("PreviousIPs");
+            
+            string fileInfo = reader.ReadToEnd();
+            reader.Close();
+            if (fileInfo != "")
+            {
+                string tempString = "";
+                for (int i = 0; i < fileInfo.Length; i++)
+                {
+                    if (fileInfo[i] == ':')
+                    {
+                        ipAddresses.Add(System.Net.IPAddress.Parse(tempString));
+                        tempString = "";
+                    }
+                    else if (fileInfo[i] == ';')
+                    {
+                        ports.Add(Convert.ToInt32(tempString));
+                        tempString = "";
+                    }
+                    else
+                    { tempString += fileInfo[i]; }
+                }
+                this.Show();
+            }
+
             GetInformation();
 
-            StreamWriter writer = new StreamWriter(tcpClient.GetStream());
-            writer.WriteLine("Mark");
-            writer.Flush();
+            JustConnected();
+        }
 
-            textBox.Text = "You have been connected.";
+        private void JustConnected()
+        {
+            StreamWriter writer = new StreamWriter(tcpClient.GetStream());
+
+            textBox.Text += "You have been connected.\n";
+            writeMessage("Please type your name.\n");
 
             UpdateThread = new System.Threading.Thread(new System.Threading.ThreadStart(UpdateClient));
+            UpdateThread.IsBackground = true;
             UpdateThread.Start();
         }
 
@@ -58,27 +94,54 @@ namespace MessengerClient
             while (true)
             {
                 StreamReader reader = new StreamReader(tcpClient.GetStream());
-                string output = reader.ReadLine();
-                if (output != "")
+                try
                 {
-                    if (output == "/%text%/")
+                    string output = reader.ReadLine();
+                    if (reader.EndOfStream)
                     {
-                        output = reader.ReadLine();
-                        writeMessage(output);
+                        Disconnect();
                     }
-                    if (output == "/%users%/")
+                    else
                     {
-                        output = reader.ReadLine();
-                        usersChanged(output);
+                        if (output != "")
+                        {
+                            if (output == "/%text%/")
+                            {
+                                output = reader.ReadLine();
+                                writeMessage(output);
+                            }
+                            if (output == "/%users%/")
+                            {
+                                output = reader.ReadLine();
+                                usersChanged(output);
+                            }
+                        }
                     }
                 }
+                catch (IOException)
+                {
+                    Disconnect();
+                }
             }
+        }
+
+        private void Disconnect()
+        {
+            tcpClient.Close();
+            writeMessage("You are no longer connected.\n");
+            usersChanged("Users:%/None");
+            UpdateThread.Abort();
         }
 
         private void writeMessage(string message)
         {
             if (!textBox.InvokeRequired)
-            { textBox.Text += message + '\n'; }
+            {
+                message = convertToReturns(message);
+                textBox.Text += message;
+                textBox.SelectionStart = textBox.Text.Length;
+                textBox.ScrollToCaret();
+            }
             else
             {
                 xThread_Message d = new xThread_Message(writeMessage);
@@ -91,7 +154,10 @@ namespace MessengerClient
         private void usersChanged(string usersList)
         {
             if (!userTextBox.InvokeRequired)
-            { userTextBox.Text = usersList; }
+            {
+                usersList = convertToReturns(usersList);
+                userTextBox.Text = usersList;
+            }
             else
             {
                 xThread_Message d = new xThread_Message(usersChanged);
@@ -101,22 +167,67 @@ namespace MessengerClient
             }
         }
 
+        private string convertToReturns(string message)
+        {
+            string tempString = "";
+            for (int i = 0; i < message.Length; i++)
+            {
+                if (message[i] == '%' && message[i + 1] == '/')
+                {
+                    i++;
+                    tempString += '\r';
+                }
+                else
+                { tempString += message[i]; }
+            }
+            return tempString;
+        }
+
         private void Messenger_FormClosing(object sender, FormClosingEventArgs e)
         {
-            UpdateThread.Abort();
-            tcpClient.Close();
+            //Application.Exit();
+            //UpdateThread.Abort();
+            //tcpClient.Close();
+            //this.Close();
+            //TODO Why isn't this working?
         }
 
         private void sendButton_Click(object sender, EventArgs e)
+        { messageReady(); }
+
+        private void messageReady()
         {
-            if (tcpClient.Connected && chatBox.Text != "")
+            try
             {
-                StreamWriter writer = new StreamWriter(tcpClient.GetStream());
-                writer.WriteLine(chatBox.Text);
-                writer.Flush();
-                chatBox.Text = "";
+                if (tcpClient.Connected && chatBox.Text != "")
+                {
+                    StreamWriter writer = new StreamWriter(tcpClient.GetStream());
+                    writer.WriteLine(chatBox.Text);
+                    writer.Flush();
+                    chatBox.Text = "";
+                }
             }
-            
+            catch (NullReferenceException)
+            { textBox.Text += "You are not connected to a server.\n"; }
+            chatBox.Focus();
+        }
+
+        private void iPAddressToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            GetInformation();
+            JustConnected();
+        }
+
+        private void disconnectToolStripMenuItem_Click(object sender, EventArgs e)
+        { Disconnect(); }
+
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+        { this.Close(); }
+
+        private void Messenger_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            { messageReady(); }
         }
     }
 }
