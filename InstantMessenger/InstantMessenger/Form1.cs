@@ -47,7 +47,7 @@ namespace InstantMessenger
                 }
             }
             ipAddress = System.Net.IPAddress.Parse(localIP);
-            port = 24658;
+            port = 80;
 
             WebRequest request = WebRequest.Create("http://www.jsonip.com/");
             WebResponse response = request.GetResponse(); //TODO
