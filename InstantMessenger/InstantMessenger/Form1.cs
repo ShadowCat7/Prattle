@@ -79,8 +79,7 @@ namespace InstantMessenger
             List<string> tempString = new List<string>();
             tempString.Add("/%text%/");
             tempString.Add("Chat server has been started.%/\t*LAN IP Address: " + ipAddress.ToString()
-                + " Port: " + port.ToString() + "%/\tExternal IP Address: " + extIP.ToString() 
-                + " Port: " + port.ToString() + "%/");
+                + "%/\tExternal IP Address: " + extIP.ToString() + "%/");
 
             SendMessage(tempString);
 
@@ -99,14 +98,25 @@ namespace InstantMessenger
                         chatServer.AcceptTcpClient();
 
                     Users.Add(new Communicator(chatConnection));
-                    usersChanged();
+                    if (checkBanList(Users[Users.Count - 1].ipAddress))
+                    {
+                        Users[Users.Count - 1].writer.WriteLine("/%text%/");
+                        Users[Users.Count - 1].writer.WriteLine("You have been banned from this server.%/");
+                        Users[Users.Count - 1].writer.Flush();
+                        Users[Users.Count - 1].client.Close();
+                        Users.RemoveAt(Users.Count - 1);
+                    }
+                    else
+                    {
+                        usersChanged();
 
-                    List<string> tempString = new List<string>();
-                    tempString.Add("/%text%/");
-                    tempString.Add("\t" + Users[Users.Count - 1].Name +
-                        " has joined the chat.%/");
+                        List<string> tempString = new List<string>();
+                        tempString.Add("/%text%/");
+                        tempString.Add("\t" + Users[Users.Count - 1].Name +
+                            " has joined the chat.%/");
 
-                    SendMessage(tempString);
+                        SendMessage(tempString);
+                    }
                 }
 
                 for (int i = 0; i < Users.Count; i++)
@@ -124,9 +134,14 @@ namespace InstantMessenger
                     if (!Users[i].client.Connected)
                     {
                         List<string> tempString = new List<string>();
-                        tempString.Add("%/text/%");
-                        tempString.Add(Users[i].Name + " has disconnected.");
-                        Users.Remove(Users[i]);
+                        tempString.Add("/%text%/");
+                        if (Users[i].Name == null)
+                        { Users[i].Name = "unknown_user"; }
+                        tempString.Add(Users[i].Name + " has disconnected.%/");
+                        SendMessage(tempString);
+                        try
+                        { Users.Remove(Users[i]); }
+                        catch (ArgumentOutOfRangeException) { }
                         usersChanged();
                     }
                 }
@@ -138,89 +153,137 @@ namespace InstantMessenger
             string tempCommand = "";
             tempCommand = lowerToCaps(Command);
 
-            if (tempCommand == "HELP")
-            {
-                writeMessage("Server Commands:\n\tSay: Text written after 'say' will be sent to all users as a message." + 
-                    "\n\tKick: The user whose name is written after 'kick' will be forcibly removed." + 
-                    "\n\tQuit: Closes the server.\n");
-            }
-
-            string tempString = "";
-            for (int i = 0; i < tempCommand.Length; i++)
-            {
-                tempString += tempCommand[i];
-                if (tempString == "SAY ")
-                {
-                    tempString = "";
-                    for (int j = 0; j < Command.Length - 4; j++)
-                    { tempString += Command[j + 4]; }
-
-
-                    List<string> tempListString = new List<string>();
-                    tempListString.Add("/%text%/");
-                    tempListString.Add("Server : " + tempString + "%/");
-                    SendMessage(tempListString);
-                }
-                if (tempString == "BAN ")
-                {
-                    tempString = "";
-                    for (int j = 0; j < Command.Length - 5; j++)
-                    { tempString += Command[j + 5]; }
-
-                    tempString = lowerToCaps(tempString);
-
-                    for (int j = 0; j < Users.Count; j++)
-                    {
-                        if (tempString == lowerToCaps(Users[j].Name))
-                        {
-                            List<string> tempList = new List<string>();
-                            tempList.Add("/%text%/");
-                            tempList.Add(Users[j].Name + " has been kicked.\n");
-                            Users[j].writer.Write("/%text%/");
-                            Users[j].writer.Write("You have been kicked.");
-                            Users[j].writer.Flush();
-                            Users[j].ReceiveMessage.Abort();
-                            Users[j].client.Close();
-                            try
-                            { Users.Remove(Users[j]); }
-                            catch (IndexOutOfRangeException) { }
-                            usersChanged();
-                            SendMessage(tempList);
-                        }
-                    }
-                }
-                if (tempString == "KICK ")
-                {
-                    tempString = "";
-                    for (int j = 0; j < Command.Length - 5; j++)
-                    { tempString += Command[j + 5]; }
-
-                    tempString = lowerToCaps(tempString);
-
-                    for (int j = 0; j < Users.Count; j++)
-                    {
-                        if (tempString == lowerToCaps(Users[j].Name))
-                        {
-                            List<string> tempList = new List<string>();
-                            tempList.Add("/%text%/");
-                            tempList.Add(Users[j].Name + " has been kicked.%/");
-                            Users[j].writer.WriteLine("/%text%/");
-                            Users[j].writer.WriteLine("You have been kicked.%/");
-                            Users[j].writer.Flush();
-                            Users[j].ReceiveMessage.Abort();
-                            Users[j].client.Close();
-                            try
-                            { Users.Remove(Users[j]); }
-                            catch (ArgumentOutOfRangeException) { }
-                            usersChanged();
-                            SendMessage(tempList);
-                        }
-                    }
-                }
-            }
+            bool isCommandValid = false;
 
             if (tempCommand == "QUIT")
             { Close(); }
+            else if (tempCommand == "HELP")
+            {
+                writeMessage("Server Commands:\n\tSay: Text written after 'say' will be sent to all users as a message." +
+                    "\n\tKick: The user whose name is written after 'kick' will be forcibly removed." +
+                    "\n\tBan: The user whose name is written after 'ban' will be permanently removed." +
+                    "\n\tPardon: The IP address that is written after 'pardon' will no longer be banned." +
+                    "\n\tQuit: Closes the server.\n");
+                isCommandValid = true;
+            }
+            else if (tempCommand == "BANNED IPS")
+            {
+                string banList = getBanList();
+                if (banList == "")
+                { textBox.Text += "No users are banned.\n"; }
+                else
+                { textBox.Text += getBanList(); }
+                isCommandValid = true;
+            }
+            else
+            {
+                string tempString = "";
+                for (int i = 0; i < tempCommand.Length; i++)
+                {
+                    tempString += tempCommand[i];
+                    if (tempString == "SAY ")
+                    {
+                        tempString = "";
+                        for (int j = 0; j < Command.Length - 4; j++)
+                        { tempString += Command[j + 4]; }
+
+
+                        List<string> tempListString = new List<string>();
+                        tempListString.Add("/%text%/");
+                        tempListString.Add("Server : " + tempString + "%/");
+                        SendMessage(tempListString);
+                        isCommandValid = true;
+                    }
+                    else if (tempString == "PARDON ")
+                    {
+                        tempString = "";
+                        for (int j = 0; j < Command.Length - 7; j++)
+                        { tempString += Command[j + 7]; }
+
+                        tempString = lowerToCaps(tempString);
+
+                        if (removeFromBanList(tempString))
+                        {
+                            List<string> tempList = new List<string>();
+                            tempList.Add("/%text%/");
+                            tempList.Add(tempString + " has been pardoned.%/");
+                            SendMessage(tempList);
+                        }
+                        else
+                        { textBox.Text += "That IP Address is not banned.\n"; }
+                        isCommandValid = true;
+                    }
+                    else if (tempString == "BAN ")
+                    {
+                        tempString = "";
+                        for (int j = 0; j < Command.Length - 4; j++)
+                        { tempString += Command[j + 4]; }
+
+                        tempString = lowerToCaps(tempString);
+
+                        bool foundName = false;
+                        for (int j = 0; j < Users.Count; j++)
+                        {
+                            if (tempString == lowerToCaps(Users[j].Name))
+                            {
+                                List<string> tempList = new List<string>();
+                                tempList.Add("/%text%/");
+                                tempList.Add(Users[j].Name + " (" + Users[j].ipAddress + ") has been banned.%/");
+                                Users[j].writer.WriteLine("/%text%/");
+                                Users[j].writer.WriteLine("You have been banned.%/");
+                                Users[j].writer.Flush();
+                                addToBanList(Users[j].ipAddress);
+                                Users[j].ReceiveMessage.Abort();
+                                Users[j].client.Close();
+                                try
+                                { Users.Remove(Users[j]); }
+                                catch (IndexOutOfRangeException) { }
+                                usersChanged();
+                                SendMessage(tempList);
+                                foundName = true;
+                            }
+                        }
+                        if (!foundName)
+                        { textBox.Text += "That is not any user's name.\n"; }
+                        isCommandValid = true;
+                    }
+                    else if (tempString == "KICK ")
+                    {
+                        tempString = "";
+                        for (int j = 0; j < Command.Length - 5; j++)
+                        { tempString += Command[j + 5]; }
+
+                        tempString = lowerToCaps(tempString);
+
+                        bool foundName = false;
+                        for (int j = 0; j < Users.Count; j++)
+                        {
+                            if (tempString == lowerToCaps(Users[j].Name))
+                            {
+                                List<string> tempList = new List<string>();
+                                tempList.Add("/%text%/");
+                                tempList.Add(Users[j].Name + " (" + Users[j].ipAddress + ") has been kicked.%/");
+                                Users[j].writer.WriteLine("/%text%/");
+                                Users[j].writer.WriteLine("You have been kicked.%/");
+                                Users[j].writer.Flush();
+                                Users[j].ReceiveMessage.Abort();
+                                Users[j].client.Close();
+                                try
+                                { Users.Remove(Users[j]); }
+                                catch (ArgumentOutOfRangeException) { }
+                                usersChanged();
+                                SendMessage(tempList);
+                                foundName = true;
+                            }
+                        }
+                        if (!foundName)
+                        { textBox.Text += "That is not any user's name.\n"; }
+                        isCommandValid = true;
+                    }
+                }
+            }
+            if (!isCommandValid)
+            { textBox.Text += "Not a valid command. Type help for information on commands.\n"; }
         }
 
         private string lowerToCaps(string input)
@@ -263,7 +326,7 @@ namespace InstantMessenger
                     Users[i].writer.WriteLine(message[1]);
                     Users[i].writer.Flush();
                 }
-                catch (ObjectDisposedException) { }
+                catch { }
             }
 
             if (message[0] == "/%text%/")
@@ -302,6 +365,67 @@ namespace InstantMessenger
                 xThread_UserList d = new xThread_UserList(usersChanged);
                 Invoke(d);
             }
+        }
+
+        private void addToBanList(string address)
+        {
+            if (!File.Exists("BanList"))
+            { File.Create("BanList").Close(); }
+
+            StreamWriter writer = new StreamWriter("BanList", true);
+            writer.WriteLine(address);
+            writer.Flush();
+            writer.Close();
+        }
+        private bool checkBanList(string address)
+        {
+            if (File.Exists("BanList"))
+            {
+                StreamReader reader = new StreamReader("BanList");
+                while (!reader.EndOfStream)
+                {
+                    if (reader.ReadLine() == address)
+                    { return true; }
+                }
+                reader.Close();
+            }
+            return false;
+        }
+        private bool removeFromBanList(string address)
+        {
+            if (File.Exists("BanList"))
+            {
+                StreamReader reader = new StreamReader("BanList");
+                List<string> bannedIPs = new List<string>();
+                while (!reader.EndOfStream)
+                { bannedIPs.Add(reader.ReadLine()); }
+                reader.Close();
+                for (int i = 0; i < bannedIPs.Count; i++)
+                {
+                    if (address == bannedIPs[i])
+                    { bannedIPs.RemoveAt(i); }
+                }
+                File.Delete("BanList");
+                File.Create("BanList").Close();
+                StreamWriter writer = new StreamWriter("BanList");
+                for (int i = 0; i < bannedIPs.Count; i++)
+                { writer.WriteLine(bannedIPs[i]); }
+                writer.Close();
+
+                return true;
+            }
+            return false;
+        }
+        private string getBanList()
+        {
+            if (File.Exists("BanList"))
+            {
+                StreamReader reader = new StreamReader("BanList");
+                string tempString = reader.ReadToEnd();
+                reader.Close();
+                return tempString;
+            }
+            return "";
         }
 
         private string convertToReturns(string message)

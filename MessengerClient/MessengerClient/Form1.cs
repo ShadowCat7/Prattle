@@ -69,6 +69,10 @@ namespace Prattle
             textBox.Text += "You have been connected.\n";
             writeMessage("Please type your name.\n");
 
+            StreamWriter writer = new StreamWriter(tcpClient.GetStream());
+            writer.WriteLine(GetExtIP());
+            writer.Flush();
+
             UpdateThread = new System.Threading.Thread(new System.Threading.ThreadStart(UpdateClient));
             UpdateThread.IsBackground = true;
             UpdateThread.Start();
@@ -165,9 +169,9 @@ namespace Prattle
                             }
                         }
                         catch (IOException)
-                        {
-                            Disconnect();
-                        }
+                        { Disconnect(); }
+                        catch (InvalidOperationException)
+                        { Disconnect(); }
                     }
                 }
                 catch (NullReferenceException)
@@ -252,17 +256,45 @@ namespace Prattle
         {
             try
             {
-                if (tcpClient.Connected && chatBox.Text != "")
+                if (chatBox.Text != "")
                 {
-                    StreamWriter writer = new StreamWriter(tcpClient.GetStream());
-                    writer.WriteLine(chatBox.Text);
-                    writer.Flush();
-                    chatBox.Text = "";
+                    if (tcpClient.Connected)
+                    {
+                        StreamWriter writer = new StreamWriter(tcpClient.GetStream());
+                        writer.WriteLine(chatBox.Text);
+                        writer.Flush();
+                        chatBox.Text = "";
+                    }
+                    else
+                    { writeMessage("You are not connected to a server.\n"); }
                 }
             }
             catch (NullReferenceException)
             { textBox.Text += "You are not connected to a server.\n"; }
             chatBox.Focus();
+        }
+
+        private string GetExtIP()
+        {
+            System.Net.WebRequest request = System.Net.WebRequest.Create("http://www.jsonip.com/");
+            System.Net.WebResponse response = request.GetResponse(); //TODO
+            StreamReader reader = new StreamReader(response.GetResponseStream());
+            string webString = reader.ReadToEnd();
+            string ipString = "";
+            for (int i = 0; i < webString.Length; i++)
+            {
+                if (webString[i] == ':')
+                {
+                    i += 2;
+                    while (webString[i] != '"')
+                    {
+                        ipString += webString[i];
+                        i++;
+                    }
+                    i = webString.Length;
+                }
+            }
+            return ipString;
         }
 
         private void GetAttention()

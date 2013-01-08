@@ -13,6 +13,7 @@ namespace InstantMessenger
         public StreamWriter writer;
         public StreamReader reader;
         public string Name;
+        public string ipAddress;
 
         public string Message;
 
@@ -24,6 +25,7 @@ namespace InstantMessenger
             writer = new StreamWriter(client.GetStream());
             reader = new StreamReader(client.GetStream());
 
+            ipAddress = reader.ReadLine();
             Name = reader.ReadLine();
 
             ReceiveMessage = new Thread(new ThreadStart(getMessage));
