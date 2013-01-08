@@ -19,12 +19,10 @@ C:\Users\Attridge\Programs\MessengerClient\MessengerClient\obj\x86\Release\Gener
 C:\Users\Attridge\Programs\MessengerClient\MessengerClient\obj\x86\Release\MessengerClient.exe
 C:\Users\Attridge\Programs\MessengerClient\MessengerClient\obj\x86\Release\MessengerClient.pdb
 C:\Users\Attridge\Programs\Prattle\MessengerClient\MessengerClient\obj\x86\Release\ResolveAssemblyReference.cache
-C:\Users\Attridge\Programs\Prattle\MessengerClient\MessengerClient\obj\x86\Release\MessengerClient.Form2.resources
 C:\Users\Attridge\Programs\Prattle\MessengerClient\MessengerClient\obj\x86\Release\GenerateResource.read.1.tlog
 C:\Users\Attridge\Programs\Prattle\MessengerClient\MessengerClient\obj\x86\Release\GenerateResource.write.1.tlog
 C:\Users\Attridge\Programs\Prattle\MessengerClient\MessengerClient\bin\Release\Prattle.exe
 C:\Users\Attridge\Programs\Prattle\MessengerClient\MessengerClient\bin\Release\Prattle.pdb
-C:\Users\Attridge\Programs\Prattle\MessengerClient\MessengerClient\obj\x86\Release\MessengerClient.Prattle.resources
 C:\Users\Attridge\Programs\Prattle\MessengerClient\MessengerClient\obj\x86\Release\Prattle.Properties.Resources.resources
 C:\Users\Attridge\Programs\Prattle\MessengerClient\MessengerClient\obj\x86\Release\Prattle.exe
 C:\Users\Attridge\Programs\Prattle\MessengerClient\MessengerClient\obj\x86\Release\Prattle.pdb
@@ -32,3 +30,5 @@ C:\Users\Attridge\Programs\Prattle\MessengerClient\MessengerClient\bin\Release\P
 C:\Users\Attridge\Programs\Prattle\MessengerClient\MessengerClient\bin\Release\Prattle.application
 C:\Users\Attridge\Programs\Prattle\MessengerClient\MessengerClient\obj\x86\Release\Prattle.exe.manifest
 C:\Users\Attridge\Programs\Prattle\MessengerClient\MessengerClient\obj\x86\Release\Prattle.application
+C:\Users\Attridge\Programs\Prattle\MessengerClient\MessengerClient\obj\x86\Release\Prattle.Form2.resources
+C:\Users\Attridge\Programs\Prattle\MessengerClient\MessengerClient\obj\x86\Release\Prattle.Prattle.resources

@@ -1,4 +1,4 @@
-﻿namespace MessengerClient
+﻿namespace Prattle
 {
     partial class Form2
     {
@@ -31,8 +31,6 @@
             this.label1 = new System.Windows.Forms.Label();
             this.ipTextBox = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
-            this.portTextBox = new System.Windows.Forms.TextBox();
             this.button1 = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
@@ -47,7 +45,7 @@
             // 
             // ipTextBox
             // 
-            this.ipTextBox.Location = new System.Drawing.Point(34, 63);
+            this.ipTextBox.Location = new System.Drawing.Point(70, 63);
             this.ipTextBox.Name = "ipTextBox";
             this.ipTextBox.Size = new System.Drawing.Size(96, 20);
             this.ipTextBox.TabIndex = 1;
@@ -55,27 +53,11 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(52, 44);
+            this.label2.Location = new System.Drawing.Point(89, 44);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(58, 13);
             this.label2.TabIndex = 2;
             this.label2.Text = "IP Address";
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(153, 44);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(26, 13);
-            this.label3.TabIndex = 4;
-            this.label3.Text = "Port";
-            // 
-            // portTextBox
-            // 
-            this.portTextBox.Location = new System.Drawing.Point(136, 63);
-            this.portTextBox.Name = "portTextBox";
-            this.portTextBox.Size = new System.Drawing.Size(58, 20);
-            this.portTextBox.TabIndex = 3;
             // 
             // button1
             // 
@@ -93,8 +75,6 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(236, 145);
             this.Controls.Add(this.button1);
-            this.Controls.Add(this.label3);
-            this.Controls.Add(this.portTextBox);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.ipTextBox);
             this.Controls.Add(this.label1);
@@ -112,8 +92,6 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox ipTextBox;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.TextBox portTextBox;
         private System.Windows.Forms.Button button1;
     }
 }

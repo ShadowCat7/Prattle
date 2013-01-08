@@ -8,7 +8,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.IO;
 
-namespace MessengerClient
+namespace Prattle
 {
     public partial class Prattle : Form
     {
@@ -16,22 +16,21 @@ namespace MessengerClient
         private string Message;
 
         private System.Net.Sockets.TcpClient tcpClient;
-        private List<System.Net.IPAddress> ipAddresses;
-        private List<int> ports; //Might come in handy later.
+        private List<string> ipAddresses;
 
         Form2 form2;
 
         private delegate void xThread_Message(string message);
+        private delegate void xGetForm();
 
         System.Threading.Thread UpdateThread;
 
         public Prattle()
         {
             InitializeComponent();
-
+            
             form2 = new Form2();
-            ipAddresses = new List<System.Net.IPAddress>();
-            ports = new List<int>();
+            ipAddresses = new List<string>();
         }
 
         private void Messenger_Load(object sender, EventArgs e)
@@ -43,33 +42,29 @@ namespace MessengerClient
             { File.Create("PreviousIPs"); }
             while (File.GetAttributes("PreviousIPs") == FileAttributes.Offline) { }
             StreamReader reader = new StreamReader("PreviousIPs");
-            
-            string fileInfo = reader.ReadToEnd();
+
+            while (!reader.EndOfStream)
+            { ipAddresses.Add(reader.ReadLine()); }
             reader.Close();
-            if (fileInfo != "")
-            {
-                string tempString = "";
-                for (int i = 0; i < fileInfo.Length; i++)
-                {
-                    if (fileInfo[i] == ':')
-                    {
-                        ipAddresses.Add(System.Net.IPAddress.Parse(tempString));
-                        tempString = "";
-                    }
-                    else if (fileInfo[i] == ';')
-                    {
-                        ports.Add(Convert.ToInt32(tempString));
-                        tempString = "";
-                    }
-                    else
-                    { tempString += fileInfo[i]; }
-                }
-                this.Show();
-            }
 
             GetInformation();
 
             JustConnected();
+        }
+
+        public void changeToolStrips()
+        {
+            try
+            {
+                toolStripMenuItem1.Text = ipAddresses[ipAddresses.Count - 1];
+                toolStripMenuItem2.Text = ipAddresses[ipAddresses.Count - 2];
+                toolStripMenuItem3.Text = ipAddresses[ipAddresses.Count - 3];
+                toolStripMenuItem4.Text = ipAddresses[ipAddresses.Count - 4];
+                toolStripMenuItem5.Text = ipAddresses[ipAddresses.Count - 5];
+                toolStripMenuItem6.Text = ipAddresses[ipAddresses.Count - 6];
+                toolStripMenuItem7.Text = ipAddresses[ipAddresses.Count - 7];
+            }
+            catch (IndexOutOfRangeException) { }
         }
 
         private void JustConnected()
@@ -86,6 +81,20 @@ namespace MessengerClient
         {
             form2.ShowDialog();
             tcpClient = form2.checkClient;
+
+            for (int i = 0; i < ipAddresses.Count; i++)
+            {
+                ipAddresses.Add(form2.serverIP.ToString());
+                if (ipAddresses.Count > 7)
+                { ipAddresses.RemoveAt(0); }
+
+                changeToolStrips();
+
+                StreamWriter writer = new StreamWriter("PreviousIPs");
+                writer.AutoFlush = true;
+                //writer.BaseStream.
+                writer.Close();
+            }
         }
 
         private void UpdateClient()
@@ -102,9 +111,7 @@ namespace MessengerClient
                         {
                             string output = reader.ReadLine();
                             if (reader.EndOfStream)
-                            {
-                                Disconnect();
-                            }
+                            { Disconnect(); }
                             else
                             {
                                 if (output != "")
@@ -119,6 +126,7 @@ namespace MessengerClient
                                         output = reader.ReadLine();
                                         usersChanged(output);
                                     }
+                                    GetAttention();
                                 }
                             }
                         }
@@ -135,10 +143,13 @@ namespace MessengerClient
 
         private void Disconnect()
         {
-            tcpClient.Close();
-            writeMessage("You are no longer connected.\n");
-            usersChanged("Users:%/None");
-            UpdateThread.Abort();
+            if (tcpClient.Client.Connected)
+            {
+                tcpClient.Close();
+                writeMessage("You are no longer connected.\n");
+                usersChanged("Users:%/None");
+                UpdateThread.Abort();
+            }
         }
 
         private void writeMessage(string message)
@@ -218,6 +229,24 @@ namespace MessengerClient
             catch (NullReferenceException)
             { textBox.Text += "You are not connected to a server.\n"; }
             chatBox.Focus();
+        }
+
+        private void GetAttention()
+        {
+            if (!this.InvokeRequired)
+            {
+                if (!chatBox.Focused)
+                {
+                    FlashWindow.Flash(this, 1);
+                    System.Media.SoundPlayer play = new System.Media.SoundPlayer("alert.wav");
+                    play.Play();
+                }
+            }
+            else
+            {
+                xGetForm d = new xGetForm(GetAttention);
+                Invoke(d);
+            }
         }
 
         private void iPAddressToolStripMenuItem_Click(object sender, EventArgs e)

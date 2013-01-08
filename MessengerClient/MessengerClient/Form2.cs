@@ -8,46 +8,45 @@ using System.Text;
 using System.Windows.Forms;
 using System.IO;
 
-namespace MessengerClient
+namespace Prattle
 {
     public partial class Form2 : Form
     {
-        private System.Net.IPAddress serverIP;
-        private int port;
+        public System.Net.IPAddress serverIP;
 
         public System.Net.Sockets.TcpClient checkClient;
 
         public Form2()
-        {
-            InitializeComponent();
-
-        }
+        { InitializeComponent(); }
 
         private void Form2_Load(object sender, EventArgs e)
         {
             AcceptButton = button1;
-
-            //todo
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            if (System.Net.IPAddress.TryParse(ipTextBox.Text, out serverIP) && portTextBox.Text != "")
+            checkClient = new System.Net.Sockets.TcpClient();
+            if (System.Net.IPAddress.TryParse(ipTextBox.Text, out serverIP))
             {
-                port = Convert.ToInt32(portTextBox.Text);
-                checkClient = new System.Net.Sockets.TcpClient();
                 try
-                { checkClient.Connect(serverIP, port); }
+                { checkClient.Connect(serverIP, 24658); }
                 catch
                 { label1.Text = "Not a valid IP Address.\nInput the IP Address of the server:"; }
-                if (checkClient.Connected)
-                {
-                    label1.Text = "Connected!";
-                    Close();
-                }
             }
             else
-            { label1.Text = "Not a valid IP Address.\nInput the IP Address of the server:"; }
+            {
+                try
+                { checkClient.Connect(ipTextBox.Text, 24658); }
+                catch
+                { label1.Text = "Not a valid IP Address.\nInput the IP Address of the server:"; }
+            }
+
+            if (checkClient.Connected)
+            {
+                label1.Text = "Connected!";
+                Close();
+            }
         }
 
         private void Form2_FormClosing(object sender, FormClosingEventArgs e)

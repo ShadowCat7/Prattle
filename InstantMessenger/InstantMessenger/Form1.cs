@@ -47,7 +47,7 @@ namespace InstantMessenger
                 }
             }
             ipAddress = System.Net.IPAddress.Parse(localIP);
-            port = 80;
+            port = 24658;
 
             WebRequest request = WebRequest.Create("http://www.jsonip.com/");
             WebResponse response = request.GetResponse(); //TODO
@@ -123,6 +123,9 @@ namespace InstantMessenger
 
                     if (!Users[i].client.Connected)
                     {
+                        List<string> tempString = new List<string>();
+                        tempString.Add("%/text/%");
+                        tempString.Add(Users[i].Name + " has disconnected.");
                         Users.Remove(Users[i]);
                         usersChanged();
                     }
@@ -158,6 +161,34 @@ namespace InstantMessenger
                     tempListString.Add("Server : " + tempString + "%/");
                     SendMessage(tempListString);
                 }
+                if (tempString == "BAN ")
+                {
+                    tempString = "";
+                    for (int j = 0; j < Command.Length - 5; j++)
+                    { tempString += Command[j + 5]; }
+
+                    tempString = lowerToCaps(tempString);
+
+                    for (int j = 0; j < Users.Count; j++)
+                    {
+                        if (tempString == lowerToCaps(Users[j].Name))
+                        {
+                            List<string> tempList = new List<string>();
+                            tempList.Add("/%text%/");
+                            tempList.Add(Users[j].Name + " has been kicked.\n");
+                            Users[j].writer.Write("/%text%/");
+                            Users[j].writer.Write("You have been kicked.");
+                            Users[j].writer.Flush();
+                            Users[j].ReceiveMessage.Abort();
+                            Users[j].client.Close();
+                            try
+                            { Users.Remove(Users[j]); }
+                            catch (IndexOutOfRangeException) { }
+                            usersChanged();
+                            SendMessage(tempList);
+                        }
+                    }
+                }
                 if (tempString == "KICK ")
                 {
                     tempString = "";
@@ -172,10 +203,15 @@ namespace InstantMessenger
                         {
                             List<string> tempList = new List<string>();
                             tempList.Add("/%text%/");
-                            tempList.Add(Users[j].Name + " has been kicked.");
+                            tempList.Add(Users[j].Name + " has been kicked.%/");
+                            Users[j].writer.WriteLine("/%text%/");
+                            Users[j].writer.WriteLine("You have been kicked.%/");
+                            Users[j].writer.Flush();
                             Users[j].ReceiveMessage.Abort();
                             Users[j].client.Close();
-                            Users.Remove(Users[j]);
+                            try
+                            { Users.Remove(Users[j]); }
+                            catch (ArgumentOutOfRangeException) { }
                             usersChanged();
                             SendMessage(tempList);
                         }
@@ -302,5 +338,8 @@ namespace InstantMessenger
             if (e.KeyCode == Keys.Enter)
             { messageReady(); }
         }
+
+        private void iPAddressToolStripMenuItem_Click(object sender, EventArgs e)
+        { MessageBox.Show("LAN IP Address: " + ipAddress.ToString() + "\nExternal IP Address: " + extIP.ToString()); }
     }
 }
