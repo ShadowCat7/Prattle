@@ -45,6 +45,8 @@ namespace Prattle
             while (!reader.EndOfStream)
             { ipAddresses.Add(reader.ReadLine()); }
             reader.Close();
+
+            changeToolStrips();
         }
 
         public void changeToolStrips()
@@ -77,9 +79,37 @@ namespace Prattle
             form2.ShowDialog();
             tcpClient = form2.checkClient;
 
+            Connect(form2.serverIP.ToString());
+        }
+
+        private void Connect(string stream)
+        {
+            tcpClient = new System.Net.Sockets.TcpClient();
+            System.Net.IPAddress tempIP;
+            if (System.Net.IPAddress.TryParse(stream, out tempIP))
+            {
+                try
+                { tcpClient.Connect(tempIP, 24658); }
+                catch { }
+            }
+            else
+            {
+                try
+                { tcpClient.Connect(stream, 24658); }
+                catch { }
+            }
+
             if (tcpClient.Connected)
             {
-                ipAddresses.Add(form2.serverIP.ToString());
+                bool alreadyHasIP = false;
+                for (int i = 0; i < ipAddresses.Count; i++)
+                {
+                    if (ipAddresses[i] == stream)
+                    { alreadyHasIP = true; }
+                }
+
+                if (!alreadyHasIP)
+                { ipAddresses.Add(stream); }
 
                 if (ipAddresses.Count > 7)
                 { ipAddresses.RemoveAt(0); }
@@ -96,7 +126,6 @@ namespace Prattle
                 { writer.WriteLine(ipAddresses[i]); }
 
                 writer.Close();
-
 
                 JustConnected();
             }
@@ -268,5 +297,20 @@ namespace Prattle
             if (e.KeyCode == Keys.Enter)
             { messageReady(); }
         }
+
+        private void toolStripMenuItem1_Click(object sender, EventArgs e)
+        { Connect(toolStripMenuItem1.Text); }
+        private void toolStripMenuItem2_Click(object sender, EventArgs e)
+        { Connect(toolStripMenuItem2.Text); }
+        private void toolStripMenuItem3_Click(object sender, EventArgs e)
+        { Connect(toolStripMenuItem3.Text); }
+        private void toolStripMenuItem4_Click(object sender, EventArgs e)
+        { Connect(toolStripMenuItem4.Text); }
+        private void toolStripMenuItem5_Click(object sender, EventArgs e)
+        { Connect(toolStripMenuItem5.Text); }
+        private void toolStripMenuItem6_Click(object sender, EventArgs e)
+        { Connect(toolStripMenuItem6.Text); }
+        private void toolStripMenuItem7_Click(object sender, EventArgs e)
+        { Connect(toolStripMenuItem7.Text); }
     }
 }
