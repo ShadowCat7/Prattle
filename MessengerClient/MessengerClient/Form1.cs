@@ -39,17 +39,12 @@ namespace Prattle
             AcceptButton = sendButton;
 
             if (!File.Exists("PreviousIPs"))
-            { File.Create("PreviousIPs"); }
-            while (File.GetAttributes("PreviousIPs") == FileAttributes.Offline) { }
+            { File.Create("PreviousIPs").Close(); }
             StreamReader reader = new StreamReader("PreviousIPs");
 
             while (!reader.EndOfStream)
             { ipAddresses.Add(reader.ReadLine()); }
             reader.Close();
-
-            GetInformation();
-
-            JustConnected();
         }
 
         public void changeToolStrips()
@@ -64,7 +59,7 @@ namespace Prattle
                 toolStripMenuItem6.Text = ipAddresses[ipAddresses.Count - 6];
                 toolStripMenuItem7.Text = ipAddresses[ipAddresses.Count - 7];
             }
-            catch (IndexOutOfRangeException) { }
+            catch (ArgumentOutOfRangeException) { }
         }
 
         private void JustConnected()
@@ -82,18 +77,28 @@ namespace Prattle
             form2.ShowDialog();
             tcpClient = form2.checkClient;
 
-            for (int i = 0; i < ipAddresses.Count; i++)
+            if (tcpClient.Connected)
             {
                 ipAddresses.Add(form2.serverIP.ToString());
+
                 if (ipAddresses.Count > 7)
                 { ipAddresses.RemoveAt(0); }
 
                 changeToolStrips();
 
+                File.Delete("PreviousIPs");
+                File.Create("PreviousIPs").Close();
+
                 StreamWriter writer = new StreamWriter("PreviousIPs");
+
                 writer.AutoFlush = true;
-                //writer.BaseStream.
+                for (int i = 0; i < ipAddresses.Count; i++)
+                { writer.WriteLine(ipAddresses[i]); }
+
                 writer.Close();
+
+
+                JustConnected();
             }
         }
 
@@ -250,10 +255,7 @@ namespace Prattle
         }
 
         private void iPAddressToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            GetInformation();
-            JustConnected();
-        }
+        { GetInformation(); }
 
         private void disconnectToolStripMenuItem_Click(object sender, EventArgs e)
         { Disconnect(); }

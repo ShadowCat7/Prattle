@@ -257,9 +257,13 @@ namespace InstantMessenger
         {
             for (int i = 0; i < Users.Count; i++)
             {
-                Users[i].writer.WriteLine(message[0]);
-                Users[i].writer.WriteLine(message[1]);
-                Users[i].writer.Flush();
+                try
+                {
+                    Users[i].writer.WriteLine(message[0]);
+                    Users[i].writer.WriteLine(message[1]);
+                    Users[i].writer.Flush();
+                }
+                catch (ObjectDisposedException) { }
             }
 
             if (message[0] == "/%text%/")
