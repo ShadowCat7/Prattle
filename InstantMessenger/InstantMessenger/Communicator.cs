@@ -52,5 +52,16 @@ namespace InstantMessenger
                 { reader.Dispose(); }
             }
         }
+
+        public void sendMessage(List<string> message)
+        {
+            try
+            {
+                writer.WriteLine(message[0]);
+                writer.WriteLine(message[1]);
+                writer.Flush();
+            }
+            catch { }
+        }
     }
 }

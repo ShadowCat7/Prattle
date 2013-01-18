@@ -15,7 +15,7 @@ namespace Prattle
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Prattle());
+            Application.Run(new Form1());
         }
     }
 }

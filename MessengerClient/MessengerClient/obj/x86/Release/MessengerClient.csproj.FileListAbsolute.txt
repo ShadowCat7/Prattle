@@ -31,4 +31,4 @@ C:\Users\Attridge\Programs\Prattle\MessengerClient\MessengerClient\bin\Release\P
 C:\Users\Attridge\Programs\Prattle\MessengerClient\MessengerClient\obj\x86\Release\Prattle.exe.manifest
 C:\Users\Attridge\Programs\Prattle\MessengerClient\MessengerClient\obj\x86\Release\Prattle.application
 C:\Users\Attridge\Programs\Prattle\MessengerClient\MessengerClient\obj\x86\Release\Prattle.Form2.resources
-C:\Users\Attridge\Programs\Prattle\MessengerClient\MessengerClient\obj\x86\Release\Prattle.Prattle.resources
+C:\Users\Attridge\Programs\Prattle\MessengerClient\MessengerClient\obj\x86\Release\Prattle.Form1.resources

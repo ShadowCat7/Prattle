@@ -14,16 +14,9 @@ namespace InstantMessenger
 {
     public partial class ChatServer : Form
     {
-        private System.Net.Sockets.TcpListener chatServer;
-        private System.Net.IPAddress ipAddress;
-        private System.Net.IPAddress extIP;
-        private int port;
-
-        private List<Communicator> Users;
-
         private string Command;
 
-        private Thread UpdateThread;
+        private Server server;
 
         private delegate void xThread_Message(string message);
         private delegate void xThread_UserList();
@@ -31,121 +24,16 @@ namespace InstantMessenger
         public ChatServer()
         {
             InitializeComponent();
-
-            userTextBox.Text = "Users:\nNone";
-
             AcceptButton = sendButton;
 
-            IPHostEntry host;
-            string localIP = "";
-            host = Dns.GetHostEntry(Dns.GetHostName());
-            foreach (IPAddress ip in host.AddressList)
-            {
-                if (ip.AddressFamily.ToString() == "InterNetwork")
-                {
-                    localIP = ip.ToString();
-                }
-            }
-            ipAddress = System.Net.IPAddress.Parse(localIP);
-            port = 24658;
-
-            WebRequest request = WebRequest.Create("http://www.jsonip.com/");
-            WebResponse response = request.GetResponse(); //TODO
-            StreamReader reader = new StreamReader(response.GetResponseStream());
-            string webString = reader.ReadToEnd();
-            string ipString = "";
-            for (int i = 0; i < webString.Length; i++)
-            {
-                if (webString[i] == ':')
-                {
-                    i += 2;
-                    while (webString[i] != '"')
-                    {
-                        ipString += webString[i];
-                        i++;
-                    }
-                    i = webString.Length;
-                }
-            }
-            extIP = System.Net.IPAddress.Parse(ipString);
-
-            chatServer = new System.Net.Sockets.TcpListener(ipAddress, port);
-            chatServer.Start();
-
-            Users = new List<Communicator>(0);
+            userTextBox.Text = "Users:\nNone";
+            
+            server = new Server(writeMessage, usersChanged);
 
             Command = "Nothing.";
 
-            List<string> tempString = new List<string>();
-            tempString.Add("/%text%/");
-            tempString.Add("Chat server has been started.%/\t*LAN IP Address: " + ipAddress.ToString()
-                + "%/\tExternal IP Address: " + extIP.ToString() + "%/");
-
-            SendMessage(tempString);
-
-            UpdateThread = new Thread(new ThreadStart(UpdateServer));
-            UpdateThread.IsBackground = true;
-            UpdateThread.Start();
-        }
-
-        public void UpdateServer()
-        {
-            while (true)
-            {
-                if (chatServer.Pending())
-                {
-                    System.Net.Sockets.TcpClient chatConnection =
-                        chatServer.AcceptTcpClient();
-
-                    Users.Add(new Communicator(chatConnection));
-                    if (checkBanList(Users[Users.Count - 1].ipAddress))
-                    {
-                        Users[Users.Count - 1].writer.WriteLine("/%text%/");
-                        Users[Users.Count - 1].writer.WriteLine("You have been banned from this server.%/");
-                        Users[Users.Count - 1].writer.Flush();
-                        Users[Users.Count - 1].client.Close();
-                        Users.RemoveAt(Users.Count - 1);
-                    }
-                    else
-                    {
-                        usersChanged();
-
-                        List<string> tempString = new List<string>();
-                        tempString.Add("/%text%/");
-                        tempString.Add("\t" + Users[Users.Count - 1].Name +
-                            " has joined the chat.%/");
-
-                        SendMessage(tempString);
-                    }
-                }
-
-                for (int i = 0; i < Users.Count; i++)
-                {
-                    if (Users[i].Message != "" && Users[i].Message != null)
-                    {
-                        List<string> tempString = new List<string>();
-                        tempString.Add("/%text%/");
-                        tempString.Add(Users[i].Name + " : " + Users[i].Message + "%/");
-
-                        SendMessage(tempString);
-                        Users[i].Message = "";
-                    }
-
-                    if (!Users[i].client.Connected)
-                    {
-                        List<string> tempString = new List<string>();
-                        tempString.Add("/%text%/");
-                        if (Users[i].Name == null)
-                        { Users[i].Name = "unknown_user"; }
-                        tempString.Add(Users[i].Name + " has disconnected.%/");
-                        SendMessage(tempString);
-                        try
-                        { Users.Remove(Users[i]); }
-                        catch (ArgumentOutOfRangeException) { }
-                        usersChanged();
-                    }
-                }
-            }
+            writeMessage("Chat server has been started.%/\t*LAN IP Address: " + server.getLocalIP().ToString()
+                + "%/\tExternal IP Address: " + server.getExtIP().ToString() + "%/" + server.getDomainAddress());
         }
 
         void Commanded()
@@ -191,7 +79,7 @@ namespace InstantMessenger
                         List<string> tempListString = new List<string>();
                         tempListString.Add("/%text%/");
                         tempListString.Add("Server : " + tempString + "%/");
-                        SendMessage(tempListString);
+                        server.SendMessage(tempListString);
                         isCommandValid = true;
                     }
                     else if (tempString == "PARDON ")
@@ -207,7 +95,7 @@ namespace InstantMessenger
                             List<string> tempList = new List<string>();
                             tempList.Add("/%text%/");
                             tempList.Add(tempString + " has been pardoned.%/");
-                            SendMessage(tempList);
+                            server.SendMessage(tempList);
                         }
                         else
                         { textBox.Text += "That IP Address is not banned.\n"; }
@@ -222,24 +110,18 @@ namespace InstantMessenger
                         tempString = lowerToCaps(tempString);
 
                         bool foundName = false;
-                        for (int j = 0; j < Users.Count; j++)
+                        for (int j = 0; j < server.getUserCount(); j++)
                         {
-                            if (tempString == lowerToCaps(Users[j].Name))
+                            if (tempString == lowerToCaps(server.getUserNames()[j]))
                             {
                                 List<string> tempList = new List<string>();
                                 tempList.Add("/%text%/");
-                                tempList.Add(Users[j].Name + " (" + Users[j].ipAddress + ") has been banned.%/");
-                                Users[j].writer.WriteLine("/%text%/");
-                                Users[j].writer.WriteLine("You have been banned.%/");
-                                Users[j].writer.Flush();
-                                addToBanList(Users[j].ipAddress);
-                                Users[j].ReceiveMessage.Abort();
-                                Users[j].client.Close();
-                                try
-                                { Users.Remove(Users[j]); }
-                                catch (IndexOutOfRangeException) { }
+                                tempList.Add(server.getUserNames()[j] + " has been banned.%/");
+                                string tempIP = server.banUser(server.getUserNames()[j]);
+                                writeMessage("(" + tempIP + ")");
+                                addToBanList(tempIP);
                                 usersChanged();
-                                SendMessage(tempList);
+                                server.SendMessage(tempList);
                                 foundName = true;
                             }
                         }
@@ -256,23 +138,15 @@ namespace InstantMessenger
                         tempString = lowerToCaps(tempString);
 
                         bool foundName = false;
-                        for (int j = 0; j < Users.Count; j++)
+                        for (int j = 0; j < server.getUserCount(); j++)
                         {
-                            if (tempString == lowerToCaps(Users[j].Name))
+                            if (tempString == lowerToCaps(server.getUserNames()[j]))
                             {
                                 List<string> tempList = new List<string>();
                                 tempList.Add("/%text%/");
-                                tempList.Add(Users[j].Name + " (" + Users[j].ipAddress + ") has been kicked.%/");
-                                Users[j].writer.WriteLine("/%text%/");
-                                Users[j].writer.WriteLine("You have been kicked.%/");
-                                Users[j].writer.Flush();
-                                Users[j].ReceiveMessage.Abort();
-                                Users[j].client.Close();
-                                try
-                                { Users.Remove(Users[j]); }
-                                catch (ArgumentOutOfRangeException) { }
-                                usersChanged();
-                                SendMessage(tempList);
+                                tempList.Add(server.getUserNames()[j] + " has been kicked.%/");
+                                server.kickUser(server.getUserNames()[j]);
+                                server.SendMessage(tempList);
                                 foundName = true;
                             }
                         }
@@ -316,29 +190,7 @@ namespace InstantMessenger
             }
         }
 
-        void SendMessage(List<string> message)
-        {
-            for (int i = 0; i < Users.Count; i++)
-            {
-                try
-                {
-                    Users[i].writer.WriteLine(message[0]);
-                    Users[i].writer.WriteLine(message[1]);
-                    Users[i].writer.Flush();
-                }
-                catch { }
-            }
-
-            if (message[0] == "/%text%/")
-            {
-                string tempString = "";
-                if (message.Count > 0)
-                { tempString = convertToReturns(message[1]); }
-                writeMessage(tempString);
-            }
-        }
-
-        private void usersChanged()
+        void usersChanged()
         {
             if (!userTextBox.InvokeRequired)
             {
@@ -346,10 +198,10 @@ namespace InstantMessenger
                 tempString.Add("/%users%/");
                 tempString.Add("Online:%/");
 
-                for (int i = 0; i < Users.Count; i++)
-                { tempString[1] += Users[i].Name + "%/"; }
+                for (int i = 0; i < server.getUserCount(); i++)
+                { tempString[1] += server.getUserNames()[i] + "%/"; }
 
-                if (Users.Count == 0)
+                if (server.getUserCount() == 0)
                 { tempString[1] += "None"; }
 
                 string tempUsernames = "";
@@ -358,7 +210,7 @@ namespace InstantMessenger
 
                 userTextBox.Text = tempUsernames;
 
-                SendMessage(tempString);
+                server.SendMessage(tempString);
             }
             else
             {
@@ -444,9 +296,6 @@ namespace InstantMessenger
             return tempString;
         }
 
-        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
-        { UpdateThread.Abort(); }
-
         private void sendButton_Click(object sender, EventArgs e)
         { messageReady(); }
 
@@ -468,6 +317,10 @@ namespace InstantMessenger
         }
 
         private void iPAddressToolStripMenuItem_Click(object sender, EventArgs e)
-        { MessageBox.Show("LAN IP Address: " + ipAddress.ToString() + "\nExternal IP Address: " + extIP.ToString()); }
+        {
+            MessageBox.Show("LAN IP Address: " + server.getLocalIP().ToString() + 
+            "\nExternal IP Address: " + server.getExtIP().ToString() +
+            "\nDomain Name: " + server.getDomainAddress());
+        }
     }
 }

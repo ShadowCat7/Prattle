@@ -22,24 +22,24 @@ namespace Prattle
         private void Form2_Load(object sender, EventArgs e)
         {
             AcceptButton = button1;
+            checkClient = new System.Net.Sockets.TcpClient();
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            checkClient = new System.Net.Sockets.TcpClient();
             if (System.Net.IPAddress.TryParse(ipTextBox.Text, out serverIP))
             {
                 try
                 { checkClient.Connect(serverIP, 24658); }
                 catch
-                { label1.Text = "Not a valid IP Address.\nInput the IP Address of the server:"; }
+                { label1.Text = "No server at that address.\nInput the IP Address of a server:"; }
             }
             else
             {
                 try
                 { checkClient.Connect(ipTextBox.Text, 24658); }
                 catch
-                { label1.Text = "Not a valid IP Address.\nInput the IP Address of the server:"; }
+                { label1.Text = "No server at that address.\nInput the IP Address of a server:"; }
             }
 
             if (checkClient.Connected)
@@ -47,11 +47,6 @@ namespace Prattle
                 label1.Text = "Connected!";
                 Close();
             }
-        }
-
-        private void Form2_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            //TODO
         }
     }
 }
