@@ -141,11 +141,12 @@ namespace Prattle
             {
                 tcpClient.Close();
                 messageWriter("You are no longer connected to a server.\n");
-                messageWriter("Users:%/None");
-                serverReadThread.Abort();
             }
             else
             { messageWriter("You are not connected to a server.\n"); }
+            tcpClient = new TcpClient();
+            userChanger("Users:%/None");
+            serverReadThread.Abort();
         }
 
         private string getExtIP()

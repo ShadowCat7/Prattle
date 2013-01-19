@@ -12,16 +12,16 @@ using System.IO;
 
 namespace InstantMessenger
 {
-    public partial class ChatServer : Form
+    public partial class Form1 : Form
     {
-        private string Command;
+        private string command;
 
         private Server server;
 
         private delegate void xThread_Message(string message);
         private delegate void xThread_UserList();
 
-        public ChatServer()
+        public Form1()
         {
             InitializeComponent();
             AcceptButton = sendButton;
@@ -30,16 +30,17 @@ namespace InstantMessenger
             
             server = new Server(writeMessage, usersChanged);
 
-            Command = "Nothing.";
+            command = "Nothing.";
 
-            writeMessage("Chat server has been started.%/\t*LAN IP Address: " + server.getLocalIP().ToString()
-                + "%/\tExternal IP Address: " + server.getExtIP().ToString() + "%/" + server.getDomainAddress());
+            writeMessage("Chat server has been started.%/\tLAN IP Address: " + server.getLocalIP().ToString()
+                + "%/\tExternal IP Address: " + server.getExtIP().ToString() + 
+                "%/\tDomain: " + server.getDomainAddress() + "%/%/");
         }
 
-        void Commanded()
+        void commanded()
         {
             string tempCommand = "";
-            tempCommand = lowerToCaps(Command);
+            tempCommand = lowerToCaps(command);
 
             bool isCommandValid = false;
 
@@ -56,11 +57,11 @@ namespace InstantMessenger
             }
             else if (tempCommand == "BANNED IPS")
             {
-                string banList = getBanList();
+                string banList = FileManager.getBanList();
                 if (banList == "")
-                { textBox.Text += "No users are banned.\n"; }
+                { writeMessage("No users are banned.\n"); }
                 else
-                { textBox.Text += getBanList(); }
+                { writeMessage("\tBanned IP Addresses:%/" + banList + "%/"); }
                 isCommandValid = true;
             }
             else
@@ -72,30 +73,30 @@ namespace InstantMessenger
                     if (tempString == "SAY ")
                     {
                         tempString = "";
-                        for (int j = 0; j < Command.Length - 4; j++)
-                        { tempString += Command[j + 4]; }
+                        for (int j = 0; j < command.Length - 4; j++)
+                        { tempString += command[j + 4]; }
 
 
                         List<string> tempListString = new List<string>();
                         tempListString.Add("/%text%/");
                         tempListString.Add("Server : " + tempString + "%/");
-                        server.SendMessage(tempListString);
+                        server.sendMessage(tempListString);
                         isCommandValid = true;
                     }
                     else if (tempString == "PARDON ")
                     {
                         tempString = "";
-                        for (int j = 0; j < Command.Length - 7; j++)
-                        { tempString += Command[j + 7]; }
+                        for (int j = 0; j < command.Length - 7; j++)
+                        { tempString += command[j + 7]; }
 
                         tempString = lowerToCaps(tempString);
 
-                        if (removeFromBanList(tempString))
+                        if (FileManager.removeFromBanList(tempString))
                         {
                             List<string> tempList = new List<string>();
                             tempList.Add("/%text%/");
                             tempList.Add(tempString + " has been pardoned.%/");
-                            server.SendMessage(tempList);
+                            server.sendMessage(tempList);
                         }
                         else
                         { textBox.Text += "That IP Address is not banned.\n"; }
@@ -104,8 +105,8 @@ namespace InstantMessenger
                     else if (tempString == "BAN ")
                     {
                         tempString = "";
-                        for (int j = 0; j < Command.Length - 4; j++)
-                        { tempString += Command[j + 4]; }
+                        for (int j = 0; j < command.Length - 4; j++)
+                        { tempString += command[j + 4]; }
 
                         tempString = lowerToCaps(tempString);
 
@@ -118,10 +119,10 @@ namespace InstantMessenger
                                 tempList.Add("/%text%/");
                                 tempList.Add(server.getUserNames()[j] + " has been banned.%/");
                                 string tempIP = server.banUser(server.getUserNames()[j]);
-                                writeMessage("(" + tempIP + ")");
-                                addToBanList(tempIP);
+                                writeMessage("(" + tempIP + ") ");
+                                FileManager.addToBanList(tempIP);
                                 usersChanged();
-                                server.SendMessage(tempList);
+                                server.sendMessage(tempList);
                                 foundName = true;
                             }
                         }
@@ -132,8 +133,8 @@ namespace InstantMessenger
                     else if (tempString == "KICK ")
                     {
                         tempString = "";
-                        for (int j = 0; j < Command.Length - 5; j++)
-                        { tempString += Command[j + 5]; }
+                        for (int j = 0; j < command.Length - 5; j++)
+                        { tempString += command[j + 5]; }
 
                         tempString = lowerToCaps(tempString);
 
@@ -146,7 +147,7 @@ namespace InstantMessenger
                                 tempList.Add("/%text%/");
                                 tempList.Add(server.getUserNames()[j] + " has been kicked.%/");
                                 server.kickUser(server.getUserNames()[j]);
-                                server.SendMessage(tempList);
+                                server.sendMessage(tempList);
                                 foundName = true;
                             }
                         }
@@ -177,6 +178,7 @@ namespace InstantMessenger
         {
             if (!textBox.InvokeRequired)
             {
+                message = convertToReturns(message);
                 textBox.Text += message;
                 textBox.SelectionStart = textBox.Text.Length;
                 textBox.ScrollToCaret();
@@ -210,74 +212,13 @@ namespace InstantMessenger
 
                 userTextBox.Text = tempUsernames;
 
-                server.SendMessage(tempString);
+                server.sendMessage(tempString);
             }
             else
             {
                 xThread_UserList d = new xThread_UserList(usersChanged);
                 Invoke(d);
             }
-        }
-
-        private void addToBanList(string address)
-        {
-            if (!File.Exists("BanList"))
-            { File.Create("BanList").Close(); }
-
-            StreamWriter writer = new StreamWriter("BanList", true);
-            writer.WriteLine(address);
-            writer.Flush();
-            writer.Close();
-        }
-        private bool checkBanList(string address)
-        {
-            if (File.Exists("BanList"))
-            {
-                StreamReader reader = new StreamReader("BanList");
-                while (!reader.EndOfStream)
-                {
-                    if (reader.ReadLine() == address)
-                    { return true; }
-                }
-                reader.Close();
-            }
-            return false;
-        }
-        private bool removeFromBanList(string address)
-        {
-            if (File.Exists("BanList"))
-            {
-                StreamReader reader = new StreamReader("BanList");
-                List<string> bannedIPs = new List<string>();
-                while (!reader.EndOfStream)
-                { bannedIPs.Add(reader.ReadLine()); }
-                reader.Close();
-                for (int i = 0; i < bannedIPs.Count; i++)
-                {
-                    if (address == bannedIPs[i])
-                    { bannedIPs.RemoveAt(i); }
-                }
-                File.Delete("BanList");
-                File.Create("BanList").Close();
-                StreamWriter writer = new StreamWriter("BanList");
-                for (int i = 0; i < bannedIPs.Count; i++)
-                { writer.WriteLine(bannedIPs[i]); }
-                writer.Close();
-
-                return true;
-            }
-            return false;
-        }
-        private string getBanList()
-        {
-            if (File.Exists("BanList"))
-            {
-                StreamReader reader = new StreamReader("BanList");
-                string tempString = reader.ReadToEnd();
-                reader.Close();
-                return tempString;
-            }
-            return "";
         }
 
         private string convertToReturns(string message)
@@ -288,7 +229,7 @@ namespace InstantMessenger
                 if (message[i] == '%' && message[i + 1] == '/')
                 {
                     i++;
-                    tempString += '\r';
+                    tempString += '\n';
                 }
                 else
                 { tempString += message[i]; }
@@ -301,16 +242,16 @@ namespace InstantMessenger
 
         private void messageReady()
         {
-            Command = chatBox.Text;
+            command = chatBox.Text;
             chatBox.Text = "";
-            Commanded();
+            commanded();
             chatBox.Focus();
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         { this.Close(); }
 
-        private void ChatServer_KeyDown(object sender, KeyEventArgs e)
+        private void form1_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
             { messageReady(); }

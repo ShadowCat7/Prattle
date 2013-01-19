@@ -13,6 +13,7 @@ namespace Prattle
     public partial class Form2 : Form
     {
         public System.Net.IPAddress serverIP;
+        public string address;
 
         public System.Net.Sockets.TcpClient checkClient;
 
@@ -45,6 +46,7 @@ namespace Prattle
             if (checkClient.Connected)
             {
                 label1.Text = "Connected!";
+                address = ipTextBox.Text;
                 Close();
             }
         }

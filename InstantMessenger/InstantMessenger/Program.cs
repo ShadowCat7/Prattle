@@ -15,7 +15,7 @@ namespace InstantMessenger
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new ChatServer());
+            Application.Run(new Form1());
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace InstantMessenger
 {
-    partial class ChatServer
+    partial class Form1
     {
         /// <summary>
         /// Required designer variable.
@@ -120,7 +120,7 @@
             this.userTextBox.TabStop = false;
             this.userTextBox.Text = "";
             // 
-            // ChatServer
+            // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -133,8 +133,7 @@
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "ChatServer";
             this.Text = "Instant Messenger";
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
-            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.ChatServer_KeyDown);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.form1_KeyDown);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.ResumeLayout(false);

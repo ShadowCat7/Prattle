@@ -16,14 +16,14 @@ namespace InstantMessenger
         private System.Net.IPAddress extIP;
         private string domainAddress;
 
-        private List<Communicator> Users;
+        private List<Communicator> users;
 
-        private Thread UpdateThread;
+        private Thread updateThread;
 
-        private delegate void WriteMessageFunc(string message);
-        private WriteMessageFunc textBoxWriter;
-        private delegate void ChangeUserFunc();
-        private ChangeUserFunc userChanger;
+        public delegate void WriteMessageFunc(string message);
+        public WriteMessageFunc textBoxWriter;
+        public delegate void ChangeUserFunc();
+        public ChangeUserFunc userChanger;
 
         public Server(WriteMessageFunc messageWriterFunc, ChangeUserFunc userChangerFunc)
         {
@@ -34,17 +34,17 @@ namespace InstantMessenger
             chatServer = new System.Net.Sockets.TcpListener(localIP, 24658);
             chatServer.Start();
 
-            Users = new List<Communicator>();
+            users = new List<Communicator>();
 
             textBoxWriter = messageWriterFunc;
             userChanger = userChangerFunc;
 
-            UpdateThread = new Thread(new ThreadStart(UpdateServer));
-            UpdateThread.IsBackground = true;
-            UpdateThread.Start();
+            updateThread = new Thread(new ThreadStart(updateServer));
+            updateThread.IsBackground = true;
+            updateThread.Start();
         }
 
-        public void UpdateServer()
+        public void updateServer()
         {
             while (true)
             {
@@ -53,14 +53,14 @@ namespace InstantMessenger
                     System.Net.Sockets.TcpClient chatConnection =
                         chatServer.AcceptTcpClient();
 
-                    Users.Add(new Communicator(chatConnection));
-                    if (checkBanList(Users[Users.Count - 1].ipAddress))
+                    users.Add(new Communicator(chatConnection, sendMessage));
+                    if (FileManager.checkBanList(users[users.Count - 1].ipAddress))
                     {
-                        Users[Users.Count - 1].writer.WriteLine("/%text%/");
-                        Users[Users.Count - 1].writer.WriteLine("You have been banned from this server.%/");
-                        Users[Users.Count - 1].writer.Flush();
-                        Users[Users.Count - 1].client.Close();
-                        Users.RemoveAt(Users.Count - 1);
+                        users[users.Count - 1].writer.WriteLine("/%text%/");
+                        users[users.Count - 1].writer.WriteLine("You have been banned from this server.%/");
+                        users[users.Count - 1].writer.Flush();
+                        users[users.Count - 1].client.Close();
+                        users.RemoveAt(users.Count - 1);
                     }
                     else
                     {
@@ -68,35 +68,25 @@ namespace InstantMessenger
 
                         List<string> tempString = new List<string>();
                         tempString.Add("/%text%/");
-                        tempString.Add("\t" + Users[Users.Count - 1].Name +
+                        tempString.Add("\t" + users[users.Count - 1].name +
                             " has joined the chat.%/");
 
-                        SendMessage(tempString);
+                        sendMessage(tempString);
                     }
                 }
 
-                for (int i = 0; i < Users.Count; i++)
+                for (int i = 0; i < users.Count; i++)
                 {
-                    if (Users[i].Message != "" && Users[i].Message != null)
+                    if (!users[i].client.Connected)
                     {
                         List<string> tempString = new List<string>();
                         tempString.Add("/%text%/");
-                        tempString.Add(Users[i].Name + " : " + Users[i].Message + "%/");
-
-                        SendMessage(tempString);
-                        Users[i].Message = "";
-                    }
-
-                    if (!Users[i].client.Connected)
-                    {
-                        List<string> tempString = new List<string>();
-                        tempString.Add("/%text%/");
-                        if (Users[i].Name == null)
-                        { Users[i].Name = "unknown_user"; }
-                        tempString.Add(Users[i].Name + " has disconnected.%/");
-                        SendMessage(tempString);
+                        if (users[i].name == null)
+                        { users[i].name = "unknown_user"; }
+                        tempString.Add(users[i].name + " has disconnected.%/");
+                        sendMessage(tempString);
                         try
-                        { Users.Remove(Users[i]); }
+                        { users.Remove(users[i]); }
                         catch (ArgumentOutOfRangeException) { }
                         userChanger();
                     }
@@ -104,65 +94,60 @@ namespace InstantMessenger
             }
         }
 
-        public void SendMessage(List<string> message)
+        public void sendMessage(List<string> message)
         {
-            for (int i = 0; i < Users.Count; i++)
-            { Users[i].sendMessage(message); }
+            for (int i = 0; i < users.Count; i++)
+            { users[i].sendMessage(message); }
 
             if (message[0] == "/%text%/")
-            {
-                string tempString = "";
-                if (message.Count > 0)
-                { tempString = convertToReturns(message[1]); }
-                textBoxWriter(tempString);
-            }
+            { textBoxWriter(message[1]); }
         }
 
         public void kickUser(string name)
         {
             int index = 0;
-            for (int i = 0; i < Users.Count; i++)
+            for (int i = 0; i < users.Count; i++)
             {
-                if (name == Users[i].Name)
+                if (name == users[i].name)
                 { index = i; }
             }
 
             List<string> kickMessage = new List<string>();
             kickMessage.Add("/%text%/");
-            kickMessage.Add("You have been kicked from the server.");
-            Users[index].sendMessage(kickMessage);
-            Users[index].ReceiveMessage.Abort();
-            Users[index].client.Close();
-            Users.RemoveAt(index);
+            kickMessage.Add("You have been kicked from the server.%/");
+            users[index].sendMessage(kickMessage);
+            users[index].receiveMessage.Abort();
+            users[index].client.Close();
+            users.RemoveAt(index);
         }
         public string banUser(string name)
         {
             int index = 0;
-            for (int i = 0; i < Users.Count; i++)
+            for (int i = 0; i < users.Count; i++)
             {
-                if (name == Users[i].Name)
+                if (name == users[i].name)
                 { index = i; }
             }
 
             List<string> banMessage = new List<string>();
             banMessage.Add("/%text%/");
-            banMessage.Add("You have been banned from the server.");
-            Users[index].sendMessage(banMessage);
-            string storeIpAddress = Users[index].ipAddress;
-            Users[index].ReceiveMessage.Abort();
-            Users[index].client.Close();
-            Users.RemoveAt(index);
+            banMessage.Add("You have been banned from the server.%/");
+            users[index].sendMessage(banMessage);
+            string storeIpAddress = users[index].ipAddress;
+            users[index].receiveMessage.Abort();
+            users[index].client.Close();
+            users.RemoveAt(index);
             return storeIpAddress;
         }
 
         public int getUserCount()
-        { return Users.Count; }
+        { return users.Count; }
 
         public List<string> getUserNames()
         {
             List<string> userNames = new List<string>();
-            for (int i = 0; i < Users.Count; i++)
-            { userNames.Add(userNames[i]); }
+            for (int i = 0; i < users.Count; i++)
+            { userNames.Add(users[i].name); }
             return userNames;
         }
 

@@ -12,25 +12,36 @@ namespace InstantMessenger
         public System.Net.Sockets.TcpClient client;
         public StreamWriter writer;
         public StreamReader reader;
-        public string Name;
+        public string name;
         public string ipAddress;
 
-        public string Message;
+        public delegate void WriteMessageFunc(List<string> message);
+        public WriteMessageFunc textBoxWriter;
 
-        public Thread ReceiveMessage;
+        public Thread receiveMessage;
 
-        public Communicator(System.Net.Sockets.TcpClient connection)
+        public Communicator(System.Net.Sockets.TcpClient connection, WriteMessageFunc messageGotten)
         {
             client = connection;
             writer = new StreamWriter(client.GetStream());
             reader = new StreamReader(client.GetStream());
 
-            ipAddress = reader.ReadLine();
-            Name = reader.ReadLine();
+            try
+            {
+                ipAddress = reader.ReadLine();
+                name = reader.ReadLine();
+            }
+            catch
+            { name = "Unnamed user"; }
 
-            ReceiveMessage = new Thread(new ThreadStart(getMessage));
-            ReceiveMessage.IsBackground = true;
-            ReceiveMessage.Start();
+            if (name != "Unnamed user")
+            {
+                textBoxWriter = messageGotten;
+
+                receiveMessage = new Thread(new ThreadStart(getMessage));
+                receiveMessage.IsBackground = true;
+                receiveMessage.Start();
+            }
         }
 
         public void getMessage()
@@ -39,12 +50,16 @@ namespace InstantMessenger
             {
                 try
                 {
-                    Message = reader.ReadLine();
                     if (reader.EndOfStream)
                     {
                         client.Close();
-                        ReceiveMessage.Abort();
+                        receiveMessage.Abort();
                     }
+                    string message = reader.ReadLine();
+                    List<string> tempList = new List<string>();
+                    tempList.Add("/%text%/");
+                    tempList.Add(name + ": " + message + "%/");
+                    textBoxWriter(tempList);
                 }
                 catch (IOException)
                 { client.Close(); }

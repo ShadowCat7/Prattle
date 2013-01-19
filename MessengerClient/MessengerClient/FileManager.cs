@@ -61,6 +61,26 @@ namespace Prattle
             writer.Close();
         }
 
+        public static void saveToPreviousIps(string address)
+        {
+            List<string> ipAddresses = getPreviousIps();
+
+            for (int i = 0; i < ipAddresses.Count; i++)
+            {
+                if (ipAddresses[i] == address)
+                { ipAddresses.RemoveAt(i); }
+            }
+            ipAddresses.Add(address);
+
+            while (ipAddresses.Count > 7)
+            { ipAddresses.RemoveAt(0); }
+
+            StreamWriter writer = new StreamWriter("previous_ips");
+            for (int i = 0; i < ipAddresses.Count; i++)
+            { writer.WriteLine(ipAddresses[i]); }
+            writer.Close();
+        }
+
         public static List<string> getPreviousIps()
         {
             if (!File.Exists("previous_ips"))
@@ -81,7 +101,7 @@ namespace Prattle
             File.Create("chat_history.txt").Close();
         }
 
-        public static void writeToChatHistory()
+        public static void writeToChatHistory(string text)
         {
             if (Config.saveChatHistory)
             {
@@ -93,6 +113,11 @@ namespace Prattle
                     writer.Flush();
                     writer.Close();
                 }
+
+                StreamWriter historyWriter = new StreamWriter("chat_history.txt", true);
+                historyWriter.Write(text);
+                historyWriter.Flush();
+                historyWriter.Close();
             }
         }
     }

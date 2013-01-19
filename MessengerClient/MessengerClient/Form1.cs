@@ -61,6 +61,10 @@ namespace Prattle
                 client = new Client(form2.checkClient, writeMessage, usersChanged);
                 writeMessage("You have been connected.\n");
                 writeMessage("Please type your name.\n");
+
+                FileManager.saveToPreviousIps(form2.address);
+
+                changeToolStrips(FileManager.getPreviousIps());
             }
         }
 
@@ -72,7 +76,7 @@ namespace Prattle
                 textBox.Text += message;
                 textBox.SelectionStart = textBox.Text.Length;
                 textBox.ScrollToCaret();
-                FileManager.writeToChatHistory();
+                FileManager.writeToChatHistory(message);
             }
             else
             {
@@ -107,7 +111,7 @@ namespace Prattle
                 if (message[i] == '%' && message[i + 1] == '/')
                 {
                     i++;
-                    tempString += '\r';
+                    tempString += '\n';
                 }
                 else
                 { tempString += message[i]; }
@@ -120,10 +124,10 @@ namespace Prattle
             chatBox.Focus();
             if (chatBox.Text != "")
             {
-                if (client.sendMessage(chatBox.Text))
-                { writeMessage(chatBox.Text); }
-                else
+                if (!client.sendMessage(chatBox.Text))
                 { writeMessage("You are not connected to a server.\n"); }
+                else
+                { chatBox.Text = ""; }
             }
         }
 
