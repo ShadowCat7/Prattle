@@ -10,10 +10,10 @@ namespace Prattle
     {
         public static void getConfiguration()
         {
-            if (!File.Exists("config"))
+            if (!File.Exists("bin/config"))
             { newConfigFile(); }
 
-            StreamReader reader = new StreamReader("config");
+            StreamReader reader = new StreamReader("bin/config");
 
             if (reader.ReadLine() == "chat history:true")
             { Config.saveChatHistory = true; }
@@ -25,10 +25,10 @@ namespace Prattle
 
         public static void changeConfig(string setting, string option)
         {
-            if (!File.Exists("config"))
+            if (!File.Exists("bin/config"))
             { newConfigFile(); }
 
-            StreamReader reader = new StreamReader("config");
+            StreamReader reader = new StreamReader("bin/config");
             List<string> tempString = new List<string>();
             while (!reader.EndOfStream)
             { tempString.Add(reader.ReadLine()); }
@@ -42,7 +42,7 @@ namespace Prattle
 
             try
             {
-                StreamWriter writer = new StreamWriter("config");
+                StreamWriter writer = new StreamWriter("bin/config");
                 for (int i = 0; i < tempString.Count; i++)
                 { writer.WriteLine(tempString[i]); }
                 writer.Close();
@@ -52,8 +52,8 @@ namespace Prattle
 
         private static void newConfigFile()
         {
-            File.Create("config").Close();
-            StreamWriter writer = new StreamWriter("config");
+            File.Create("bin/config").Close();
+            StreamWriter writer = new StreamWriter("bin/config");
             writer.AutoFlush = true;
 
             writer.WriteLine("chat history:true");
@@ -75,7 +75,7 @@ namespace Prattle
             while (ipAddresses.Count > 7)
             { ipAddresses.RemoveAt(0); }
 
-            StreamWriter writer = new StreamWriter("previous_ips");
+            StreamWriter writer = new StreamWriter("bin/previous_ips");
             for (int i = 0; i < ipAddresses.Count; i++)
             { writer.WriteLine(ipAddresses[i]); }
             writer.Close();
@@ -83,9 +83,9 @@ namespace Prattle
 
         public static List<string> getPreviousIps()
         {
-            if (!File.Exists("previous_ips"))
-            { File.Create("previous_ips").Close(); }
-            StreamReader reader = new StreamReader("previous_ips");
+            if (!File.Exists("bin/previous_ips"))
+            { File.Create("bin/previous_ips").Close(); }
+            StreamReader reader = new StreamReader("bin/previous_ips");
 
             List<string> ipAddresses = new List<string>();
             while (!reader.EndOfStream)

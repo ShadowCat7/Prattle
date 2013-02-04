@@ -9,23 +9,24 @@ using System.Net.Sockets;
 
 namespace InstantMessenger
 {
-    class Server
+    public static class Server
     {
-        private System.Net.Sockets.TcpListener chatServer;
-        private System.Net.IPAddress localIP;
-        private System.Net.IPAddress extIP;
-        private string domainAddress;
+        private static System.Net.Sockets.TcpListener chatServer;
+        private static System.Net.IPAddress localIP;
+        private static System.Net.IPAddress extIP;
+        private static string domainAddress;
 
-        private List<Communicator> users;
-
-        private Thread updateThread;
+        public static List<Communicator> users;
 
         public delegate void WriteMessageFunc(string message);
-        public WriteMessageFunc textBoxWriter;
-        public delegate void ChangeUserFunc();
-        public ChangeUserFunc userChanger;
+        private static WriteMessageFunc textBoxWriter;
 
-        public Server(WriteMessageFunc messageWriterFunc, ChangeUserFunc userChangerFunc)
+        public delegate void ChangeUserFunc();
+        public static ChangeUserFunc userChanger;
+
+        private static Thread updateThread;
+
+        public static void initialize(WriteMessageFunc argWriteMessage, ChangeUserFunc argUserChanger)
         {
             localIP = getLocalIP();
             extIP = getExtIP();
@@ -34,76 +35,63 @@ namespace InstantMessenger
             chatServer = new System.Net.Sockets.TcpListener(localIP, 24658);
             chatServer.Start();
 
-            users = new List<Communicator>();
+            textBoxWriter = argWriteMessage;
+            userChanger = argUserChanger;
 
-            textBoxWriter = messageWriterFunc;
-            userChanger = userChangerFunc;
+            users = new List<Communicator>();
 
             updateThread = new Thread(new ThreadStart(updateServer));
             updateThread.IsBackground = true;
             updateThread.Start();
         }
 
-        public void updateServer()
+        public static void updateServer()
         {
             while (true)
             {
-                if (chatServer.Pending())
+                System.Net.Sockets.TcpClient chatConnection =
+                    chatServer.AcceptTcpClient();
+
+                Communicator newConnection = new Communicator(chatConnection, sendMessage);
+
+                if (FileManager.checkBanList(newConnection.ipAddress))
                 {
-                    System.Net.Sockets.TcpClient chatConnection =
-                        chatServer.AcceptTcpClient();
-
-                    users.Add(new Communicator(chatConnection, sendMessage));
-                    if (FileManager.checkBanList(users[users.Count - 1].ipAddress))
+                    newConnection.writer.WriteLine("/%text%/");
+                    newConnection.writer.WriteLine("You have been banned from this server.%/");
+                    newConnection.writer.Flush();
+                    newConnection.client.Close();
+                }
+                else
+                {
+                    if (newConnection.name != "Unnamed user")
                     {
-                        users[users.Count - 1].writer.WriteLine("/%text%/");
-                        users[users.Count - 1].writer.WriteLine("You have been banned from this server.%/");
-                        users[users.Count - 1].writer.Flush();
-                        users[users.Count - 1].client.Close();
-                        users.RemoveAt(users.Count - 1);
-                    }
-                    else
-                    {
-                        userChanger();
-
                         List<string> tempString = new List<string>();
                         tempString.Add("/%text%/");
-                        tempString.Add("\t" + users[users.Count - 1].name +
+                        tempString.Add("\t" + newConnection.name +
                             " has joined the chat.%/");
 
-                        sendMessage(tempString);
-                    }
-                }
-
-                for (int i = 0; i < users.Count; i++)
-                {
-                    if (!users[i].client.Connected)
-                    {
-                        List<string> tempString = new List<string>();
-                        tempString.Add("/%text%/");
-                        if (users[i].name == null)
-                        { users[i].name = "unknown_user"; }
-                        tempString.Add(users[i].name + " has disconnected.%/");
-                        sendMessage(tempString);
-                        try
-                        { users.Remove(users[i]); }
-                        catch (ArgumentOutOfRangeException) { }
+                        users.Add(newConnection);
                         userChanger();
+
+                        sendMessage(tempString);
                     }
                 }
             }
         }
 
-        public void sendMessage(List<string> message)
+        public static void sendMessage(List<string> message)
         {
             for (int i = 0; i < users.Count; i++)
             { users[i].sendMessage(message); }
 
-            if (message[0] == "/%text%/")
-            { textBoxWriter(message[1]); }
+            if (message.Count == 2)
+            {
+                if (message[0] == "/%text%/")
+                { textBoxWriter(message[1]); }
+            }
         }
 
-        public void kickUser(string name)
+        public static void kickUser(string name)
         {
             int index = 0;
             for (int i = 0; i < users.Count; i++)
@@ -120,7 +108,7 @@ namespace InstantMessenger
             users[index].client.Close();
             users.RemoveAt(index);
         }
-        public string banUser(string name)
+        public static string banUser(string name)
         {
             int index = 0;
             for (int i = 0; i < users.Count; i++)
@@ -140,10 +128,10 @@ namespace InstantMessenger
             return storeIpAddress;
         }
 
-        public int getUserCount()
+        public static int getUserCount()
         { return users.Count; }
 
-        public List<string> getUserNames()
+        public static List<string> getUserNames()
         {
             List<string> userNames = new List<string>();
             for (int i = 0; i < users.Count; i++)
@@ -151,7 +139,7 @@ namespace InstantMessenger
             return userNames;
         }
 
-        public IPAddress getLocalIP()
+        public static IPAddress getLocalIP()
         {
             if (localIP == null)
             {
@@ -169,7 +157,7 @@ namespace InstantMessenger
             { return localIP; }
         }
 
-        public IPAddress getExtIP()
+        public static IPAddress getExtIP()
         {
             if (extIP == null)
             {
@@ -205,7 +193,7 @@ namespace InstantMessenger
             { return extIP; }
         }
 
-        public string getDomainAddress()
+        public static string getDomainAddress()
         {
             if (domainAddress == null)
             {

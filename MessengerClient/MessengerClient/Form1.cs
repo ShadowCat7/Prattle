@@ -21,7 +21,10 @@ namespace Prattle
         private delegate void xGetForm();
 
         public Form1()
-        { InitializeComponent(); }
+        {
+            InitializeComponent();
+            Icon = Icon.ExtractAssociatedIcon("bin/prattle.ico");
+        }
 
         private void Messenger_Load(object sender, EventArgs e)
         {
@@ -139,7 +142,7 @@ namespace Prattle
             if (!chatBox.Focused)
             {
                 FlashWindow.Flash(this, 1);
-                System.Media.SoundPlayer play = new System.Media.SoundPlayer("alert.wav");
+                System.Media.SoundPlayer play = new System.Media.SoundPlayer("bin/alert.wav");
                 play.Play();
             }
         }

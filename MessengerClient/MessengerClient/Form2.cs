@@ -18,7 +18,10 @@ namespace Prattle
         public System.Net.Sockets.TcpClient checkClient;
 
         public Form2()
-        { InitializeComponent(); }
+        {
+            InitializeComponent();
+            Icon.ExtractAssociatedIcon("bin/prattle.ico");
+        }
 
         private void Form2_Load(object sender, EventArgs e)
         {

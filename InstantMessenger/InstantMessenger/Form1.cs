@@ -16,8 +16,6 @@ namespace InstantMessenger
     {
         private string command;
 
-        private Server server;
-
         private delegate void xThread_Message(string message);
         private delegate void xThread_UserList();
 
@@ -26,15 +24,15 @@ namespace InstantMessenger
             InitializeComponent();
             AcceptButton = sendButton;
 
+            Server.initialize(writeMessage, usersChanged);
+
             userTextBox.Text = "Users:\nNone";
-            
-            server = new Server(writeMessage, usersChanged);
 
             command = "Nothing.";
 
-            writeMessage("Chat server has been started.%/\tLAN IP Address: " + server.getLocalIP().ToString()
-                + "%/\tExternal IP Address: " + server.getExtIP().ToString() + 
-                "%/\tDomain: " + server.getDomainAddress() + "%/%/");
+            writeMessage("Chat Server has been started.%/\tLAN IP Address: " + Server.getLocalIP().ToString()
+                + "%/\tExternal IP Address: " + Server.getExtIP().ToString() + 
+                "%/\tDomain: " + Server.getDomainAddress() + "%/%/");
         }
 
         void commanded()
@@ -52,7 +50,7 @@ namespace InstantMessenger
                     "\n\tKick: The user whose name is written after 'kick' will be forcibly removed." +
                     "\n\tBan: The user whose name is written after 'ban' will be permanently removed." +
                     "\n\tPardon: The IP address that is written after 'pardon' will no longer be banned." +
-                    "\n\tQuit: Closes the server.\n");
+                    "\n\tQuit: Closes the Server.\n");
                 isCommandValid = true;
             }
             else if (tempCommand == "BANNED IPS")
@@ -80,7 +78,7 @@ namespace InstantMessenger
                         List<string> tempListString = new List<string>();
                         tempListString.Add("/%text%/");
                         tempListString.Add("Server : " + tempString + "%/");
-                        server.sendMessage(tempListString);
+                        Server.sendMessage(tempListString);
                         isCommandValid = true;
                     }
                     else if (tempString == "PARDON ")
@@ -96,7 +94,7 @@ namespace InstantMessenger
                             List<string> tempList = new List<string>();
                             tempList.Add("/%text%/");
                             tempList.Add(tempString + " has been pardoned.%/");
-                            server.sendMessage(tempList);
+                            Server.sendMessage(tempList);
                         }
                         else
                         { textBox.Text += "That IP Address is not banned.\n"; }
@@ -111,18 +109,18 @@ namespace InstantMessenger
                         tempString = lowerToCaps(tempString);
 
                         bool foundName = false;
-                        for (int j = 0; j < server.getUserCount(); j++)
+                        for (int j = 0; j < Server.getUserCount(); j++)
                         {
-                            if (tempString == lowerToCaps(server.getUserNames()[j]))
+                            if (tempString == lowerToCaps(Server.getUserNames()[j]))
                             {
                                 List<string> tempList = new List<string>();
                                 tempList.Add("/%text%/");
-                                tempList.Add(server.getUserNames()[j] + " has been banned.%/");
-                                string tempIP = server.banUser(server.getUserNames()[j]);
+                                tempList.Add(Server.getUserNames()[j] + " has been banned.%/");
+                                string tempIP = Server.banUser(Server.getUserNames()[j]);
                                 writeMessage("(" + tempIP + ") ");
                                 FileManager.addToBanList(tempIP);
                                 usersChanged();
-                                server.sendMessage(tempList);
+                                Server.sendMessage(tempList);
                                 foundName = true;
                             }
                         }
@@ -139,15 +137,15 @@ namespace InstantMessenger
                         tempString = lowerToCaps(tempString);
 
                         bool foundName = false;
-                        for (int j = 0; j < server.getUserCount(); j++)
+                        for (int j = 0; j < Server.getUserCount(); j++)
                         {
-                            if (tempString == lowerToCaps(server.getUserNames()[j]))
+                            if (tempString == lowerToCaps(Server.getUserNames()[j]))
                             {
                                 List<string> tempList = new List<string>();
                                 tempList.Add("/%text%/");
-                                tempList.Add(server.getUserNames()[j] + " has been kicked.%/");
-                                server.kickUser(server.getUserNames()[j]);
-                                server.sendMessage(tempList);
+                                tempList.Add(Server.getUserNames()[j] + " has been kicked.%/");
+                                Server.kickUser(Server.getUserNames()[j]);
+                                Server.sendMessage(tempList);
                                 foundName = true;
                             }
                         }
@@ -200,10 +198,10 @@ namespace InstantMessenger
                 tempString.Add("/%users%/");
                 tempString.Add("Online:%/");
 
-                for (int i = 0; i < server.getUserCount(); i++)
-                { tempString[1] += server.getUserNames()[i] + "%/"; }
+                for (int i = 0; i < Server.getUserCount(); i++)
+                { tempString[1] += Server.getUserNames()[i] + "%/"; }
 
-                if (server.getUserCount() == 0)
+                if (Server.getUserCount() == 0)
                 { tempString[1] += "None"; }
 
                 string tempUsernames = "";
@@ -212,7 +210,7 @@ namespace InstantMessenger
 
                 userTextBox.Text = tempUsernames;
 
-                server.sendMessage(tempString);
+                Server.sendMessage(tempString);
             }
             else
             {
@@ -259,9 +257,9 @@ namespace InstantMessenger
 
         private void iPAddressToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("LAN IP Address: " + server.getLocalIP().ToString() + 
-            "\nExternal IP Address: " + server.getExtIP().ToString() +
-            "\nDomain Name: " + server.getDomainAddress());
+            MessageBox.Show("LAN IP Address: " + Server.getLocalIP().ToString() + 
+            "\nExternal IP Address: " + Server.getExtIP().ToString() +
+            "\nDomain Name: " + Server.getDomainAddress());
         }
     }
 }

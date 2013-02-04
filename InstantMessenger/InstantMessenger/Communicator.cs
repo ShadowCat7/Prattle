@@ -28,20 +28,19 @@ namespace InstantMessenger
 
             try
             {
+                //This will block other people from joining. Fix.
                 ipAddress = reader.ReadLine();
                 name = reader.ReadLine();
+                if (name == null)
+                { name = "Unnamed user"; }
             }
             catch
             { name = "Unnamed user"; }
+            textBoxWriter = messageGotten;
 
-            if (name != "Unnamed user")
-            {
-                textBoxWriter = messageGotten;
-
-                receiveMessage = new Thread(new ThreadStart(getMessage));
-                receiveMessage.IsBackground = true;
-                receiveMessage.Start();
-            }
+            receiveMessage = new Thread(new ThreadStart(getMessage));
+            receiveMessage.IsBackground = true;
+            receiveMessage.Start();
         }
 
         public void getMessage()
@@ -50,22 +49,34 @@ namespace InstantMessenger
             {
                 try
                 {
-                    if (reader.EndOfStream)
-                    {
-                        client.Close();
-                        receiveMessage.Abort();
-                    }
                     string message = reader.ReadLine();
-                    List<string> tempList = new List<string>();
-                    tempList.Add("/%text%/");
-                    tempList.Add(name + ": " + message + "%/");
-                    textBoxWriter(tempList);
+                    if (reader.EndOfStream)
+                    { userDisconnect(); }
+                    if (message != null)
+                    {
+                        List<string> tempList = new List<string>();
+                        tempList.Add("/%text%/");
+                        tempList.Add(name + ": " + message + "%/");
+                        textBoxWriter(tempList);
+                    }
                 }
                 catch (IOException)
-                { client.Close(); }
-                catch (ObjectDisposedException)
-                { reader.Dispose(); }
+                { userDisconnect(); }
             }
+        }
+
+        private void userDisconnect()
+        {
+            client.Close();
+            Server.users.Remove(this);
+            Server.userChanger();
+
+            List<string> tempList = new List<string>();
+            tempList.Add("/%text%/");
+            tempList.Add("\t" + name + " has disconnected." + "%/");
+            textBoxWriter(tempList);
+
+            receiveMessage.Abort();
         }
 
         public void sendMessage(List<string> message)
